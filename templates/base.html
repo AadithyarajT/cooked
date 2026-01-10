@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Am I Cooked?</title>
+    
+    <!-- Google Fonts + basic reset -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg: #0f0f12;
+            --bg-card: #16181f;
+            --text: #e1e1ff;
+            --text-muted: #a0a0c0;
+            --red: #ff2d55;
+            --red-dark: #c41e3b;
+            --border: #333344;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', system-ui, sans-serif;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        header {
+            background: linear-gradient(to bottom, rgba(20,20,30,0.9), transparent);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 5%;
+        }
+
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            font-family: 'Orbitron', monospace;
+            font-size: 2.1rem;
+            font-weight: 700;
+            color: var(--red);
+            text-decoration: none;
+            letter-spacing: -1px;
+            transition: transform 0.2s;
+        }
+
+        .logo:hover {
+            transform: scale(1.03);
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .search-form {
+            position: relative;
+        }
+
+        .search-form input {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 2rem;
+            padding: 0.65rem 1rem 0.65rem 2.8rem;
+            color: var(--text);
+            font-size: 0.95rem;
+            width: 280px;
+            transition: all 0.25s;
+        }
+
+        .search-form input:focus {
+            outline: none;
+            border-color: var(--red);
+            box-shadow: 0 0 0 3px rgba(255,45,85,0.15);
+            width: 320px;
+        }
+
+        .search-form::before {
+            content: "🔍";
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        .nav-links a {
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .nav-links a:hover,
+        .nav-links a:focus {
+            background: rgba(255,45,85,0.12);
+            color: var(--red);
+        }
+
+        .logout-btn {
+            background: rgba(255,45,85,0.18);
+            color: var(--red) !important;
+        }
+
+        .logout-btn:hover {
+            background: var(--red);
+            color: white !important;
+        }
+
+        main {
+            max-width: 1100px;
+            margin: 2.5rem auto;
+            padding: 0 5%;
+        }
+
+        footer {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            border-top: 1px solid var(--border);
+            margin-top: 4rem;
+        }
+        .nav-links a {
+        color: var(--text);
+        text-decoration: none;
+        font-weight: 500;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        transition: all 0.2s;
+        position: relative;
+    }
+
+    .nav-links a:hover,
+    .nav-links a:focus {
+        background: rgba(255,45,85,0.12);
+        color: var(--red);
+    }
+
+    /* === ACTIVE STATE === */
+    .nav-links a.active {
+        background: rgba(255,45,85,0.25);
+        color: var(--red);
+        font-weight: 600;
+    }
+
+    /* Optional: nice underline effect for active */
+    .nav-links a.active::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 60%;
+        height: 2px;
+        background: var(--red);
+        border-radius: 2px;
+    }
+
+    /* Logout keeps its own style even when active */
+    .logout-btn {
+        background: rgba(255,45,85,0.18);
+        color: var(--red) !important;
+    }
+
+    .logout-btn:hover {
+        background: var(--red);
+        color: white !important;
+    }
+    </style>
+</head>
+<body>
+
+
+    {% include 'navbar.html' %}
+
+<main>
+    {% block content %}
+    {% endblock %}
+</main>
+
+<footer>
+    <p>© 2025 Am I Cooked? — Confess. Be Judged. Stay Anonymous.</p>
+</footer>
+
+</body>
+</html>

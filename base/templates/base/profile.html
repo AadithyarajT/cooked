@@ -1,0 +1,9 @@
+{%extends 'base.html'%}
+
+{%block content%}
+<h1>User Profile</h1>
+<p>Username: {{ user.username }}</p>
+<p>Email: {{ user.email }}</p>
+<a href="{% url 'update_profile' %}">Edit Profile</a>
+<a href="{% url 'change_password' %}">Change Password</a>
+{%endblock%}

@@ -1,0 +1,44 @@
+<header>
+    <div class="navbar">
+        <a href="/" class="logo">Cooked?</a>
+
+        {% if user.is_authenticated %}
+        <div class="nav-right">
+            <!-- Search bar -->
+            <form method="get" action="{% url 'public_feed' %}" class="search-form">
+                <input type="text" name="q" placeholder="Search confessions..." autocomplete="off">
+            </form>
+
+            <!-- Navigation links with active state -->
+            <div class="nav-links">
+                <a href="{% url 'create_post' %}"
+                   class="{% if request.resolver_match.url_name == 'create_post' %}active{% endif %}">
+                    Confess
+                </a>
+
+                <a href="{% url 'public_feed' %}"
+                   class="{% if request.resolver_match.url_name == 'public_feed' %}active{% endif %}">
+                    Feed
+                </a>
+
+                <a href="{% url 'view_profile' %}"
+                   class="{% if request.resolver_match.url_name == 'view_profile' %}active{% endif %}">
+                    Profile
+                </a>
+
+                <a href="{% url 'logoutuser' %}" class="logout-btn">
+                    Logout
+                </a>
+            </div>
+        </div>
+
+        {% else %}
+        <div class="nav-links">
+            <a href="{% url 'loginget' %}"
+               class="{% if request.resolver_match.url_name == 'loginget' %}active{% endif %}">
+                Login
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</header>
