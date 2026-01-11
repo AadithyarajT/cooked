@@ -1,3 +1,222 @@
+
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="delete-container">
+    <div class="delete-card">
+        <h1 class="delete-title">
+            <span class="flame">🔥</span> Delete Confession <span class="flame">🔥</span>
+        </h1>
+
+        <div class="warning-box">
+            <p class="warning-text">
+                Are you <strong>absolutely sure</strong> you want to permanently delete
+            </p>
+            <p class="obj-highlight">"{{ obj }}"</p>
+            <p class="warning-text">
+                This action cannot be undone. Your sins will be erased forever.
+            </p>
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} {{ message.tags }}-glow">
+                {{ message }}
+            </div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="POST" class="delete-form">
+            {% csrf_token %}
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-destroy">
+                    Yes, Burn It Forever
+                </button>
+
+                <a href="{{ request.META.HTTP_REFERER|default:'/' }}" 
+                   class="btn btn-cancel">
+                    No, Keep It Alive
+                </a>
+            </div>
+        </form>
+
+        <p class="final-note">
+            Once deleted, no one will ever see this confession again...<br>
+            Are you ready to let it die?
+        </p>
+    </div>
+</div>
+
+<style>
+    .delete-container {
+        min-height: 80vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem 5%;
+        background: linear-gradient(135deg, #0f0f12 0%, #1a0005 100%);
+    }
+
+    .delete-card {
+        background: var(--bg-card);
+        border: 2px solid #c41e3b;
+        border-radius: 16px;
+        padding: 3.5rem 3rem;
+        width: 100%;
+        max-width: 620px;
+        box-shadow: 0 20px 60px rgba(196,30,59,0.3),
+                    0 0 50px rgba(255,45,85,0.25);
+        text-align: center;
+    }
+
+    .delete-title {
+        font-family: 'Orbitron', monospace;
+        font-size: 3.2rem;
+        font-weight: 900;
+        color: var(--red);
+        margin-bottom: 1.8rem;
+        text-shadow: 0 0 30px rgba(255,45,85,0.6);
+        letter-spacing: -1px;
+    }
+
+    .flame {
+        animation: flicker 2.5s infinite alternate;
+    }
+
+    .warning-box {
+        background: rgba(196,30,59,0.15);
+        border: 1px solid #c41e3b;
+        border-radius: 12px;
+        padding: 1.8rem;
+        margin: 1.5rem 0 2.5rem;
+    }
+
+    .warning-text {
+        color: #ff758a;
+        font-size: 1.25rem;
+        margin: 0.6rem 0;
+        line-height: 1.5;
+    }
+
+    .obj-highlight {
+        color: white;
+        font-size: 1.6rem;
+        font-weight: 700;
+        margin: 1.2rem 0;
+        padding: 0.8rem;
+        background: rgba(0,0,0,0.4);
+        border-radius: 8px;
+        word-break: break-word;
+    }
+
+    .delete-form {
+        margin: 2rem 0;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 1.5rem;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .btn {
+        padding: 1.1rem 2.4rem;
+        font-size: 1.15rem;
+        font-weight: 700;
+        border-radius: 50px;
+        text-decoration: none;
+        cursor: pointer;
+        transition: all 0.35s;
+        border: none;
+    }
+
+    .btn-destroy {
+        background: #c41e3b;
+        color: white;
+        box-shadow: 0 8px 25px rgba(196,30,59,0.5);
+    }
+
+    .btn-destroy:hover {
+        background: #ff2d55;
+        transform: scale(1.08) translateY(-4px);
+        box-shadow: 0 15px 40px rgba(255,45,85,0.7);
+    }
+
+    .btn-cancel {
+        background: transparent;
+        border: 2px solid var(--red);
+        color: var(--red);
+    }
+
+    .btn-cancel:hover {
+        background: rgba(255,45,85,0.15);
+        transform: translateY(-3px);
+    }
+
+    .final-note {
+        margin-top: 2.5rem;
+        color: var(--text-muted);
+        font-size: 1rem;
+        font-style: italic;
+        line-height: 1.6;
+    }
+
+    /* Messages */
+    .alert {
+        padding: 1.2rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+        font-weight: 500;
+        border-left: 5px solid;
+    }
+
+    .alert-success {
+        background: rgba(0, 200, 100, 0.15);
+        color: #00ff9d;
+        border-left-color: #00c864;
+    }
+
+    .alert-error, .alert-danger {
+        background: rgba(255, 45, 85, 0.18);
+        color: var(--red);
+        border-left-color: var(--red);
+    }
+
+    @keyframes flicker {
+        0%, 100% { opacity: 1; text-shadow: 0 0 25px rgba(255,45,85,0.6); }
+        50% { opacity: 0.75; text-shadow: 0 0 12px rgba(255,45,85,0.3); }
+    }
+
+    @media (max-width: 576px) {
+        .delete-card {
+            padding: 2.8rem 2rem;
+        }
+        .delete-title {
+            font-size: 2.6rem;
+        }
+        .form-actions {
+            flex-direction: column;
+            gap: 1.2rem;
+        }
+    }
+</style>
+
+{% endblock %}
+
+
+
+
+
+
+
+
+
+{% comment %} 
+
+
 {% extends 'base.html' %}
 
 {% block content %}
@@ -8,4 +227,4 @@
         <button type="submit" value="Confirm">Yes, Delete</button>
         <a href="{{ request.META.HTTP_REFERER }}">Cancel</a>
     </form>
-{% endblock content%}
+{% endblock content%}  {% endcomment %}

@@ -1,4 +1,239 @@
-{% extends 'base.html' %}   
+
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="auth-container">
+    <div class="auth-card">
+        {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} {{ message.tags }}-glow">
+                {{ message }}
+            </div>
+            {% endfor %}
+        {% endif %}
+
+        <h1 class="auth-title">
+            <span class="flame">🔥</span> Login <span class="flame">🔥</span>
+        </h1>
+
+        <p class="auth-subtitle">Time to confess... or watch others burn.</p>
+
+        <form method="POST" class="auth-form">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input 
+                    type="text" 
+                    id="username" 
+                    name="username" 
+                    placeholder="Enter your anon name" 
+                    required 
+                    autocomplete="username"
+                    autofocus
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input 
+                    type="password" 
+                    id="password" 
+                    name="password" 
+                    placeholder="••••••••" 
+                    required 
+                    autocomplete="current-password"
+                >
+            </div>
+
+            <button type="submit" formaction="{% url 'login' %}" class="btn btn-login">
+                Enter the Roast Zone
+            </button>
+
+            <div class="auth-footer">
+                <p>Don't have an account yet?</p>
+                <a href="{% url 'registergget' %}" class="register-link">
+                    Register → Get Cooked
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    .auth-container {
+        min-height: 80vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+        background: linear-gradient(135deg, #0f0f12 0%, #1a0005 100%);
+    }
+
+    .auth-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 3rem 2.5rem;
+        width: 100%;
+        max-width: 460px;
+        box-shadow: 0 15px 40px rgba(0,0,0,0.6),
+                    0 0 30px rgba(255,45,85,0.15);
+        transition: transform 0.3s;
+    }
+
+    .auth-card:hover {
+        transform: translateY(-8px);
+    }
+
+    .auth-title {
+        font-family: 'Orbitron', monospace;
+        font-size: 3.2rem;
+        font-weight: 900;
+        color: var(--red);
+        text-align: center;
+        margin-bottom: 0.8rem;
+        text-shadow: 0 0 25px rgba(255,45,85,0.5);
+        letter-spacing: -1px;
+    }
+
+    .flame {
+        animation: flicker 2.5s infinite alternate;
+    }
+
+    .auth-subtitle {
+        text-align: center;
+        color: var(--text-muted);
+        font-size: 1.1rem;
+        margin-bottom: 2.5rem;
+        opacity: 0.9;
+    }
+
+    .auth-form {
+        display: flex;
+        flex-direction: column;
+        gap: 1.6rem;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .form-group label {
+        color: var(--text);
+        font-weight: 500;
+        font-size: 0.95rem;
+    }
+
+    .form-group input {
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 0.9rem 1.2rem;
+        color: var(--text);
+        font-size: 1rem;
+        transition: all 0.25s;
+    }
+
+    .form-group input:focus {
+        outline: none;
+        border-color: var(--red);
+        box-shadow: 0 0 0 3px rgba(255,45,85,0.18);
+    }
+
+    .btn-login {
+        background: var(--red);
+        color: white;
+        border: none;
+        padding: 1rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+        border-radius: 50px;
+        cursor: pointer;
+        margin-top: 1rem;
+        transition: all 0.3s;
+    }
+
+    .btn-login:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 25px rgba(255,45,85,0.45);
+    }
+
+    .auth-footer {
+        text-align: center;
+        margin-top: 1.8rem;
+        color: var(--text-muted);
+        font-size: 0.95rem;
+    }
+
+    .register-link {
+        color: var(--red);
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+
+    .register-link:hover {
+        color: #ff5c7a;
+        text-decoration: underline;
+    }
+
+    /* Message alerts */
+    .alert {
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
+        font-weight: 500;
+        text-align: center;
+    }
+
+    .alert-success {
+        background: rgba(0, 200, 100, 0.18);
+        color: #00ff9d;
+        border: 1px solid rgba(0, 200, 100, 0.4);
+    }
+
+    .alert-error, .alert-danger {
+        background: rgba(255, 45, 85, 0.18);
+        color: var(--red);
+        border: 1px solid rgba(255, 45, 85, 0.5);
+    }
+
+    .*-glow {
+        box-shadow: 0 0 15px rgba(255,45,85,0.3);
+    }
+
+    @keyframes flicker {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.75; }
+    }
+
+    @media (max-width: 480px) {
+        .auth-card {
+            padding: 2.5rem 1.8rem;
+        }
+        .auth-title {
+            font-size: 2.6rem;
+        }
+    }
+</style>
+
+{% endblock %}
+
+
+
+
+
+
+
+
+
+
+
+{% comment %} {% extends 'base.html' %}   
 
 {% block content %}
     
@@ -23,4 +258,4 @@
         <a href="{% url 'registergget' %}">Register Here</a>
 </div>
 
-{%endblock content%}
+{%endblock content%} {% endcomment %}

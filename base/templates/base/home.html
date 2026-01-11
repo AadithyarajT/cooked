@@ -2,7 +2,266 @@
 
 {% block content %}
 
-<h1>Welcome to the Home Page</h1>
-<p>This is the home page of the Am I Cooked? website.</p>
+<div class="home-page">
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="hero-content">
+            <h1 class="hero-title animate-in">
+                Am I Cooked? 
+            </h1>
+
+            <p class="hero-tagline animate-in delay-1">
+                Confess your worst life decisions.<br class="mobile-br">
+                Get brutally judged by strangers.<br class="mobile-br">
+                Stay completely anonymous.
+            </p>
+
+            <div class="hero-actions animate-in delay-2">
+                {% if user.is_authenticated %}
+                    <a href="{% url 'create_post' %}" class="btn btn-primary btn-glow">
+                        Confess Now 
+                    </a>
+                    <a href="{% url 'public_feed' %}" class="btn btn-outline">
+                        See What Others Did
+                    </a>
+                {% else %}
+                    <a href="{% url 'loginget' %}" class="btn btn-primary btn-glow">
+                        Login to Confess
+                    </a>
+                    <a href="{% url 'public_feed' %}" class="btn btn-outline">
+                        Browse Anonymous Roasts
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features-section">
+        <div class="feature-grid">
+            <div class="feature-card animate-in delay-3">
+                <h3>100% Anonymous</h3>
+                <p>No names, no profiles, no traces.<br>Just raw, unfiltered truth.</p>
+            </div>
+
+            <div class="feature-card animate-in delay-4">
+                <h3>Community Judgment</h3>
+                <p>Get voted: Cooked or Saved?<br>The internet never lies.</p>
+            </div>
+
+            <div class="feature-card animate-in delay-5">
+                <h3>Savage Replies</h3>
+                <p>Roasts, advice, or straight-up destruction.<br>Your call to take it.</p>
+            </div>
+        </div>
+    </section>
+</div>
+
+<style>
+    .home-page {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* Hero */
+    .hero-section {
+        flex: 1;
+        min-height: 60vh;
+        max-height: 75vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #0f0f12 0%, #1a0005 100%);
+        position: relative;
+        overflow: hidden;
+        padding: 2rem 5%;
+        text-align: center;
+    }
+
+    .hero-content {
+        max-width: 900px;
+        width: 100%;
+    }
+
+    .hero-title {
+        font-family: 'Orbitron', monospace;
+        font-size: clamp(2.8rem, 8vw, 5.5rem);
+        font-weight: 900;
+        color: var(--red);
+        margin-bottom: 1.2rem;
+        letter-spacing: -1.5px;
+        text-shadow: 0 0 30px rgba(255,45,85,0.6);
+        line-height: 1.1;
+    }
+
+    .flame {
+        animation: flicker 3s infinite alternate;
+    }
+
+    .hero-tagline {
+        font-size: clamp(1.1rem, 4vw, 1.4rem);
+        color: var(--text);
+        line-height: 1.5;
+        margin-bottom: 2.2rem;
+        opacity: 0.9;
+    }
+
+    .hero-actions {
+        display: flex;
+        gap: 1.2rem;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .btn {
+        padding: 0.9rem 2rem;
+        font-size: clamp(0.95rem, 3vw, 1.1rem);
+        font-weight: 600;
+        border-radius: 50px;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        min-width: 180px;
+        text-align: center;
+    }
+
+    .btn-primary {
+        background: var(--red);
+        color: white;
+        border: none;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 25px rgba(255,45,85,0.5);
+    }
+
+    .btn-outline {
+        background: transparent;
+        border: 2px solid var(--red);
+        color: var(--red);
+    }
+
+    .btn-outline:hover {
+        background: rgba(255,45,85,0.12);
+        transform: translateY(-4px);
+    }
+
+    /* Features */
+    .features-section {
+        padding: 3rem 5% 4rem;
+        background: var(--bg);
+    }
+
+    .feature-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 2rem;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .feature-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 2rem 1.5rem;
+        text-align: center;
+        transition: all 0.4s ease;
+    }
+
+    .feature-card:hover {
+        transform: translateY(-10px);
+        border-color: var(--red);
+        box-shadow: 0 15px 35px rgba(255,45,85,0.18);
+    }
+
+    .feature-icon {
+        font-size: 3.5rem;
+        margin-bottom: 1rem;
+        color: var(--red);
+    }
+
+    .feature-card h3 {
+        color: var(--text);
+        font-size: 1.4rem;
+        margin-bottom: 0.8rem;
+    }
+
+    .feature-card p {
+        color: var(--text-muted);
+        font-size: 0.95rem;
+        line-height: 1.5;
+    }
+
+    /* Animations */
+    .animate-in {
+        opacity: 0;
+        transform: translateY(30px);
+        animation: fadeInUp 0.8s ease forwards;
+    }
+
+    .delay-1 { animation-delay: 0.2s; }
+    .delay-2 { animation-delay: 0.4s; }
+    .delay-3 { animation-delay: 0.6s; }
+    .delay-4 { animation-delay: 0.8s; }
+    .delay-5 { animation-delay: 1s; }
+
+    @keyframes fadeInUp {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes flicker {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.75; }
+    }
+
+    /* Mobile adjustments */
+    @media (max-width: 768px) {
+        .hero-section {
+            min-height: 70vh;
+            padding: 4rem 8% 3rem;
+        }
+
+        .hero-title {
+            font-size: clamp(2.6rem, 10vw, 4.2rem);
+        }
+
+        .hero-tagline {
+            font-size: 1.2rem;
+        }
+
+        .hero-actions {
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .btn {
+            width: 100%;
+            max-width: 320px;
+        }
+
+        .features-section {
+            padding: 2.5rem 8%;
+        }
+
+        .feature-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .hero-section {
+            min-height: 65vh;
+        }
+
+        .feature-card {
+            padding: 1.8rem 1.2rem;
+        }
+    }
+</style>
 
 {% endblock %}

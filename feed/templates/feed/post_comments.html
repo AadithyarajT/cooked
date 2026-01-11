@@ -1,0 +1,33 @@
+<h3>Judgments ({{ post.comments.count }})</h3>
+
+<!-- Comment form -->
+<form method="POST" action="{% url 'add_comment' post.id %}" hx-post="{% url 'add_comment' post.id %}" hx-target="#sidebar-content" hx-swap="innerHTML">
+    {% csrf_token %}
+    <textarea name="content" placeholder="Drop your savage judgment..." required></textarea>
+    <button type="submit" style="margin-top:0.8rem; background:var(--red); color:white; border:none; padding:0.7rem 1.2rem; border-radius:6px; cursor:pointer;">
+        Judge It
+    </button>
+</form>
+
+<div style="margin-top:1.5rem;">
+    {% for comment in post.comments.all %}
+    <div class="comment-item">
+        <div class="comment-header">
+            <strong>@{{ comment.author.username }}</strong>
+            <span>{{ comment.created_at|timesince }} ago</span>
+        </div>
+        <p>{{ comment.text|linebreaks }}</p>
+
+        {% if user == comment.author %}
+        <form method="POST" action="{% url 'delete_comment' comment.id %}" hx-post="{% url 'delete_comment' comment.id %}" hx-target="#sidebar-content" hx-swap="innerHTML" style="margin-top:0.6rem;">
+            {% csrf_token %}
+            <button type="submit" style="background:none; border:none; color:var(--red); cursor:pointer; font-size:0.85rem;">
+                Delete
+            </button>
+        </form>
+        {% endif %}
+    </div>
+    {% empty %}
+    <p class="empty-state">No judgments yet... roast it first! 👀</p>
+    {% endfor %}
+</div>
