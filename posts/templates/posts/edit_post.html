@@ -1,4 +1,198 @@
-{% extends 'base.html' %} {% block content %}
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="edit-page">
+    <div class="edit-card">
+        <h1 class="edit-title">
+            <span class="flame">🔥</span> Edit Confession <span class="flame">🔥</span>
+        </h1>
+
+        <p class="edit-subtitle">Fix your mistake... or make it even more legendary.</p>
+
+        {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} {{ message.tags }}-glow">
+                {{ message }}
+            </div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="POST" class="edit-form">
+            {% csrf_token %}
+            <input type="hidden" name="post_id" value="{{ post.id }}">
+
+            <div class="form-group">
+                <label for="title">Title</label>
+                <input type="text" name="title" id="title" value="{{ post.title }}" placeholder="Make it more savage..." required maxlength="120">
+            </div>
+
+            <div class="form-group">
+                <label for="content">Your Confession</label>
+                <textarea name="content" id="content" rows="10" required placeholder="Rewrite your sins...">{{ post.content }}</textarea>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-update">Update Confession</button>
+                <a href="{% url 'public_feed' %}" class="btn btn-back">Back to Feed</a>
+                <a href="{% url 'delete_post' post.id %}" class="btn btn-delete" onclick="return confirm('Delete this confession forever? 🔥');">Delete</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    .edit-page {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1.5rem 5%;
+        background: linear-gradient(135deg, #0f0f12 0%, #1a0005 100%);
+    }
+
+    .edit-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: clamp(1.5rem, 4vw, 2.5rem);
+        width: 100%;
+        max-width: 720px;
+        box-shadow: 0 15px 45px rgba(0,0,0,0.6);
+        transition: transform 0.3s;
+    }
+
+    .edit-card:hover { transform: translateY(-6px); }
+
+    .edit-title {
+        font-family: 'Orbitron', monospace;
+        font-size: clamp(2.2rem, 6vw, 3rem);
+        color: var(--red);
+        text-align: center;
+        margin-bottom: 0.8rem;
+        text-shadow: 0 0 25px rgba(255,45,85,0.5);
+    }
+
+    .flame { animation: flicker 3s infinite alternate; }
+
+    .edit-subtitle {
+        text-align: center;
+        color: var(--text-muted);
+        font-size: clamp(1rem, 3.5vw, 1.15rem);
+        margin-bottom: 2rem;
+    }
+
+    .edit-form {
+        display: flex;
+        flex-direction: column;
+        gap: 1.6rem;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .form-group label {
+        color: var(--text);
+        font-weight: 600;
+        font-size: 1.05rem;
+    }
+
+    .form-group input,
+    .form-group textarea {
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 0.9rem 1.2rem;
+        color: var(--text);
+        font-size: 1.05rem;
+        transition: border-color 0.25s, box-shadow 0.25s;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus {
+        outline: none;
+        border-color: var(--red);
+        box-shadow: 0 0 0 3px rgba(255,45,85,0.2);
+    }
+
+    .form-group textarea {
+        resize: vertical;
+        min-height: 140px;
+        max-height: 280px;
+    }
+
+    .form-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        justify-content: center;
+        margin-top: 1.5rem;
+    }
+
+    .btn {
+        padding: 0.9rem 2rem;
+        font-size: 1.05rem;
+        font-weight: 600;
+        border-radius: 50px;
+        transition: all 0.3s;
+        min-width: 140px;
+        text-align: center;
+    }
+
+    .btn-update { background: var(--red); color: white; border: none; }
+    .btn-back { background: transparent; border: 2px solid var(--red); color: var(--red); }
+    .btn-delete { background: transparent; border: 2px solid #c41e3b; color: #ff2d55; }
+
+    .btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px rgba(255,45,85,0.4);
+    }
+
+    .alert {
+        padding: 1rem;
+        border-radius: 10px;
+        margin-bottom: 1.5rem;
+        text-align: center;
+        border-left: 5px solid;
+    }
+
+    .alert-success { background: rgba(0,200,100,0.15); color: #00ff9d; border-left-color: #00c864; }
+    .alert-error, .alert-danger { background: rgba(255,45,85,0.18); color: var(--red); border-left-color: var(--red); }
+
+    @keyframes flicker { 0%,100% {opacity:1;} 50% {opacity:0.75;} }
+
+    @media (max-width: 768px) {
+        .edit-page { padding: 1rem 6%; }
+        .edit-card { padding: 2rem 1.6rem; }
+        .edit-title { font-size: clamp(2rem, 7vw, 2.6rem); }
+        .form-actions { flex-direction: column; }
+        .btn { width: 100%; max-width: 320px; }
+    }
+
+    @media (max-height: 700px) {
+        .edit-card { padding: 1.8rem 1.5rem; }
+        .edit-subtitle { margin-bottom: 1.5rem; }
+    }
+</style>
+
+{% endblock %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+{% comment %} {% extends 'base.html' %} {% block content %}
 
 <h1>Edit Post</h1>
 <form method="post" action="">
@@ -15,4 +209,4 @@
     <a href="{% url 'public_feed' %}">Back to Feed</a>
     <br>
 </form>
-{% endblock %}
+{% endblock %} {% endcomment %}

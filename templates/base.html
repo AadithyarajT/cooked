@@ -2,14 +2,14 @@
 <html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
     <title>Am I Cooked?</title>
     
-    <!-- Google Fonts + basic reset -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
-    
+    <script src="https://unpkg.com/htmx.org@2.0.1"></script>
+
     <style>
         :root {
             --bg: #0f0f12;
@@ -27,22 +27,22 @@
             box-sizing: border-box;
         }
 
-        body {
+        html, body {
             background: var(--bg);
             color: var(--text);
-            font-family: 'Inter', system-ui, sans-serif;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
             line-height: 1.6;
             min-height: 100vh;
+            overflow-x: hidden;
         }
 
         header {
-            background: linear-gradient(to bottom, rgba(20,20,30,0.9), transparent);
-            backdrop-filter: blur(10px);
+            background: linear-gradient(to bottom, rgba(20,20,30,0.92), transparent);
+            backdrop-filter: blur(12px);
             position: sticky;
             top: 0;
-            z-index: 100;
+            z-index: 1000;
             border-bottom: 1px solid var(--border);
-            padding: 1rem 5%;
         }
 
         .navbar {
@@ -51,40 +51,44 @@
             align-items: center;
             max-width: 1400px;
             margin: 0 auto;
+            padding: 1rem 5%;
         }
 
         .logo {
             font-family: 'Orbitron', monospace;
-            font-size: 2.1rem;
+            font-size: clamp(1.8rem, 5vw, 2.3rem);
             font-weight: 700;
             color: var(--red);
             text-decoration: none;
             letter-spacing: -1px;
-            transition: transform 0.2s;
+            transition: transform 0.25s;
         }
 
-        .logo:hover {
-            transform: scale(1.03);
-        }
+        .logo:hover { transform: scale(1.04); }
 
         .nav-right {
             display: flex;
             align-items: center;
-            gap: 1.5rem;
+            gap: 1.2rem;
         }
 
         .search-form {
             position: relative;
+            display: none; /* Hidden on mobile, show on desktop */
+        }
+
+        @media (min-width: 768px) {
+            .search-form { display: block; }
         }
 
         .search-form input {
             background: var(--bg-card);
             border: 1px solid var(--border);
             border-radius: 2rem;
-            padding: 0.65rem 1rem 0.65rem 2.8rem;
+            padding: 0.7rem 1rem 0.7rem 2.8rem;
             color: var(--text);
             font-size: 0.95rem;
-            width: 280px;
+            width: 240px;
             transition: all 0.25s;
         }
 
@@ -92,7 +96,7 @@
             outline: none;
             border-color: var(--red);
             box-shadow: 0 0 0 3px rgba(255,45,85,0.15);
-            width: 320px;
+            width: 280px;
         }
 
         .search-form::before {
@@ -102,7 +106,12 @@
             top: 50%;
             transform: translateY(-50%);
             color: var(--text-muted);
-            font-size: 1.1rem;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
         }
 
         .nav-links a {
@@ -110,18 +119,25 @@
             text-decoration: none;
             font-weight: 500;
             padding: 0.5rem 1rem;
-            border-radius: 6px;
+            border-radius: 8px;
             transition: all 0.2s;
+            font-size: 0.95rem;
         }
 
         .nav-links a:hover,
         .nav-links a:focus {
-            background: rgba(255,45,85,0.12);
+            background: rgba(255,45,85,0.15);
             color: var(--red);
         }
 
+        .nav-links a.active {
+            background: rgba(255,45,85,0.3);
+            color: var(--red);
+            font-weight: 600;
+        }
+
         .logout-btn {
-            background: rgba(255,45,85,0.18);
+            background: rgba(255,45,85,0.2);
             color: var(--red) !important;
         }
 
@@ -131,80 +147,39 @@
         }
 
         main {
-            max-width: 1100px;
-            margin: 2.5rem auto;
-            padding: 0 5%;
+            flex: 1;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1.5rem 5%;
         }
 
         footer {
             text-align: center;
-            padding: 3rem 1rem;
+            padding: 2rem 1rem;
             color: var(--text-muted);
-            font-size: 0.85rem;
+            font-size: 0.9rem;
             border-top: 1px solid var(--border);
-            margin-top: 4rem;
         }
-        .nav-links a {
-        color: var(--text);
-        text-decoration: none;
-        font-weight: 500;
-        padding: 0.5rem 1rem;
-        border-radius: 6px;
-        transition: all 0.2s;
-        position: relative;
-    }
 
-    .nav-links a:hover,
-    .nav-links a:focus {
-        background: rgba(255,45,85,0.12);
-        color: var(--red);
-    }
-
-    /* === ACTIVE STATE === */
-    .nav-links a.active {
-        background: rgba(255,45,85,0.25);
-        color: var(--red);
-        font-weight: 600;
-    }
-
-    /* Optional: nice underline effect for active */
-    .nav-links a.active::after {
-        content: '';
-        position: absolute;
-        bottom: 0;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 60%;
-        height: 2px;
-        background: var(--red);
-        border-radius: 2px;
-    }
-
-    /* Logout keeps its own style even when active */
-    .logout-btn {
-        background: rgba(255,45,85,0.18);
-        color: var(--red) !important;
-    }
-
-    .logout-btn:hover {
-        background: var(--red);
-        color: white !important;
-    }
+        /* Global responsive helpers */
+        @media (max-width: 768px) {
+            .navbar { padding: 0.9rem 6%; }
+            .nav-links { gap: 0.6rem; }
+            .nav-links a { padding: 0.4rem 0.8rem; font-size: 0.9rem; }
+        }
     </style>
 </head>
 <body>
 
-
     {% include 'navbar.html' %}
 
-<main>
-    {% block content %}
-    {% endblock %}
-</main>
+    <main>
+        {% block content %}{% endblock %}
+    </main>
 
-<footer>
-    <p>© 2025 Am I Cooked? — Confess. Be Judged. Stay Anonymous.</p>
-</footer>
+    <footer>
+        <p>© 2026 Am I Cooked? — Confess. Be Judged. Stay Anonymous.</p>
+    </footer>
 
 </body>
 </html>

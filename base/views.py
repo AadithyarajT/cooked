@@ -1,5 +1,6 @@
 from django.shortcuts import redirect, render
 from django.contrib import messages
+from base import models
 from posts.models import Post, Topic
 from django.db.models import Q
 from django.contrib.auth import authenticate, login, logout
@@ -7,11 +8,11 @@ from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
 
-#login page
+# login page
 def loginget(request):
     return render(request, "base/login.html")
 
-#login page check
+# login page check
 
 def loginPage(request):
     if request.method == "POST":
@@ -41,11 +42,11 @@ def loginPage(request):
 
     return render(request, "base/login.html")
 
-#register page
+# register page
 def registergget(request):
     return render(request, "base/register.html")
 
-#register page check
+# register page check
 def registerPage(request):
     username = request.POST.get("username")
     email = request.POST.get("email")
@@ -81,9 +82,29 @@ def home(request):
 
     return render(request, "base/home.html")
 
-@login_required(login_url="login")  
+
+@login_required(login_url="login")
 def view_profile(request):
-    return render(request, "base/profile.html")
+    # Get posts created by the current user
+    user_posts = Post.objects.filter(created_by=request.user).order_by("-created_at")
+
+    # Get cooked scores for user's posts
+    # for post in user_posts:
+    #     # Calculate average score for each post
+    #     if post.scores.exists():
+    #         post.average_score = post.scores.aggregate(models.Avg("score"))[
+    #             "score__avg"
+    #         ]
+    #     else:
+    #         post.average_score = None
+
+    context = {
+        "user": request.user,
+        "posts": user_posts,
+        "post_count": user_posts.count(),
+    }
+    return render(request, "base/profile.html", context)
+
 
 @login_required(login_url="login")
 def update_profile(request):

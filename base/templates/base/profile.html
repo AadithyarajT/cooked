@@ -1,4 +1,365 @@
-{%extends 'base.html'%}
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="profile-page">
+    <!-- User Info - always visible -->
+    <div class="user-info-card">
+        <div class="user-header">
+            <div class="avatar-flame"></div>
+            <h1 class="user-title">@{{ user.username }}</h1>
+        </div>
+
+        <div class="user-details-grid">
+            <div class="detail-item">
+                <span class="label">Email</span>
+                <span class="value">{{ user.email|default:"Hidden" }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="label">Joined</span>
+                <span class="value">{{ user.date_joined|date:"F d, Y" }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="label">Confessions</span>
+                <span class="value highlight">{{ post_count }}</span>
+            </div>
+        </div>
+
+        <div class="profile-actions">
+            <a href="{% url 'update_profile' %}" class="btn btn-edit">Edit Profile</a>
+            <a href="{% url 'change_password' %}" class="btn btn-password">Change Password</a>
+            <a href="{% url 'create_post' %}" class="btn btn-create"> New Confession</a>
+        </div>
+    </div>
+
+    <!-- Scrollable posts section only -->
+    <div class="posts-wrapper">
+        <h2 class="section-title">Your Confessions ({{ post_count }})</h2>
+
+        {% if posts %}
+        <div class="posts-scroll-container">
+            {% for post in posts %}
+            <div class="post-card">
+                <div class="post-header">
+                    <span class="topic-badge">#{{ post.topic.name|default:"Uncategorized" }}</span>
+                    <span class="post-time">{{ post.created_at|timesince }} ago</span>
+                </div>
+
+                <h3 class="post-title">
+                    <a href="{% url 'feed_content' post.id %}">{{ post.title }}</a>
+                </h3>
+
+                <p class="post-preview">{{ post.content|truncatewords:40|linebreaksbr }}</p>
+
+                <div class="post-actions">
+                    <a href="{% url 'feed_content' post.id %}" class="btn btn-view">View</a>
+                    <a href="{% url 'update_post' post.id %}" class="btn btn-edit-sm">Edit</a>
+                    <a href="{% url 'delete_post' post.id %}" 
+                       class="btn btn-delete-sm"
+                       onclick="return confirm('Delete this confession forever? ');">
+                        Delete
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="no-posts">
+            <p>You haven't dropped any confessions yet...</p>
+            <a href="{% url 'create_post' %}" class="btn btn-create">Start Now</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+    .profile-page {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        background: var(--bg);
+        padding: clamp(1rem, 4vw, 2rem) 5%;
+        max-width: 1400px;
+        margin: 0 auto;
+        gap: 2.5rem;
+    }
+
+    /* User Info - fixed height, always visible */
+    .user-info-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: clamp(1.8rem, 4vw, 2.5rem);
+        box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+        text-align: center;
+        transition: transform 0.3s;
+    }
+
+    .user-info-card:hover {
+        transform: translateY(-6px);
+    }
+
+    .user-header {
+        margin-bottom: 1.5rem;
+    }
+
+    .avatar-flame {
+        font-size: clamp(3rem, 8vw, 4.2rem);
+        margin-bottom: 0.6rem;
+        animation: flicker 3s infinite alternate;
+    }
+
+    .user-title {
+        font-family: 'Orbitron', monospace;
+        font-size: clamp(2.2rem, 6vw, 2.8rem);
+        color: var(--red);
+        margin: 0;
+        text-shadow: 0 0 20px rgba(255,45,85,0.5);
+    }
+
+    .user-details-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 1.2rem;
+        margin: 1.2rem 0;
+    }
+
+    .detail-item {
+        background: rgba(255,45,85,0.08);
+        border-radius: 10px;
+        padding: 1rem;
+    }
+
+    .label {
+        color: var(--text-muted);
+        font-size: clamp(0.85rem, 3vw, 0.95rem);
+        display: block;
+        margin-bottom: 0.3rem;
+    }
+
+    .value {
+        color: var(--text);
+        font-size: clamp(1.1rem, 4vw, 1.25rem);
+        font-weight: 600;
+    }
+
+    .highlight {
+        color: var(--red);
+    }
+
+    .profile-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        justify-content: center;
+        margin-top: 1.5rem;
+    }
+
+    .btn {
+        padding: clamp(0.8rem, 3vw, 1rem) clamp(1.2rem, 4vw, 1.8rem);
+        font-size: clamp(0.9rem, 3.5vw, 1.05rem);
+        font-weight: 600;
+        border-radius: 50px;
+        text-decoration: none;
+        transition: all 0.3s;
+        min-height: 48px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 140px;
+    }
+
+    .btn-edit { background: var(--red); color: white; border: none; }
+    .btn-password { border: 2px solid var(--red); color: var(--red); background: transparent; }
+    .btn-create { background: #00c853; color: white; border: none; }
+
+    .btn:hover,
+    .btn:focus {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(255,45,85,0.4);
+    }
+
+    /* Scrollable posts only */
+    .posts-wrapper {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .section-title {
+        color: var(--red);
+        font-size: clamp(1.6rem, 5vw, 2rem);
+        text-align: center;
+        margin: 0;
+    }
+
+    .posts-scroll-container {
+        flex: 1;
+        overflow-y: auto;
+        max-height: clamp(300px, 55vh, 600px); /* dynamic max height */
+        padding-right: 0.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1.2rem;
+        scrollbar-width: thin;
+        scrollbar-color: var(--red) rgba(30,30,40,0.6);
+    }
+
+    .posts-scroll-container::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .posts-scroll-container::-webkit-scrollbar-track {
+        background: rgba(30,30,40,0.6);
+        border-radius: 4px;
+    }
+
+    .posts-scroll-container::-webkit-scrollbar-thumb {
+        background: var(--red);
+        border-radius: 4px;
+    }
+
+    .post-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 1.3rem;
+        transition: all 0.25s;
+    }
+
+    .post-card:hover {
+        transform: translateY(-4px);
+        border-color: var(--red);
+        box-shadow: 0 8px 20px rgba(255,45,85,0.15);
+    }
+
+    .post-header {
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 0.8rem;
+        margin-bottom: 0.8rem;
+        font-size: 0.9rem;
+    }
+
+    .topic-badge {
+        background: rgba(255,45,85,0.15);
+        color: var(--red);
+        padding: 0.2rem 0.7rem;
+        border-radius: 20px;
+    }
+
+    .post-time {
+        color: var(--text-muted);
+    }
+
+    .post-title a {
+        color: var(--red);
+        text-decoration: none;
+        font-size: clamp(1.2rem, 4vw, 1.35rem);
+        font-weight: 600;
+        display: block;
+        margin-bottom: 0.6rem;
+    }
+
+    .post-preview {
+        color: var(--text-muted);
+        line-height: 1.5;
+        font-size: 0.95rem;
+        margin-bottom: 1rem;
+    }
+
+    .post-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.8rem;
+        justify-content: flex-end;
+    }
+
+    .btn-view, .btn-edit-sm, .btn-delete-sm {
+        padding: 0.5rem 1.1rem;
+        font-size: 0.9rem;
+        border-radius: 30px;
+        text-decoration: none;
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .btn-view { background: var(--red); color: white; border: none; }
+    .btn-edit-sm { border: 1px solid #00ff9d; color: #00ff9d; background: transparent; }
+    .btn-delete-sm { border: 1px solid var(--red); color: var(--red); background: transparent; }
+
+    .no-posts {
+        text-align: center;
+        padding: 3rem 1rem;
+        background: var(--bg-card);
+        border-radius: 12px;
+        border: 1px dashed var(--border);
+    }
+
+    .no-posts p {
+        color: var(--text-muted);
+        font-size: 1.2rem;
+        margin-bottom: 1.2rem;
+    }
+
+    @keyframes flicker {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.75; }
+    }
+
+    /* Mobile adjustments */
+    @media (max-width: 768px) {
+        .profile-page {
+            padding: 1.2rem 6%;
+            gap: 2rem;
+        }
+
+        .user-info-card {
+            padding: 2rem 1.5rem;
+        }
+
+        .user-title {
+            font-size: clamp(2rem, 7vw, 2.5rem);
+        }
+
+        .user-details-grid {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        .profile-actions {
+            flex-direction: column;
+            gap: 0.9rem;
+        }
+
+        .btn {
+            width: 100%;
+            max-width: 340px;
+        }
+
+        .posts-scroll-container {
+            max-height: 50vh;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .post-card {
+            padding: 1.2rem;
+        }
+
+        .post-title a {
+            font-size: 1.25rem;
+        }
+    }
+</style>
+
+{% endblock %}
+
+{% comment %} {%extends 'base.html'%}
 
 {%block content%}
 <h1>User Profile</h1>
@@ -6,4 +367,4 @@
 <p>Email: {{ user.email }}</p>
 <a href="{% url 'update_profile' %}">Edit Profile</a>
 <a href="{% url 'change_password' %}">Change Password</a>
-{%endblock%}
+{%endblock%} {% endcomment %}

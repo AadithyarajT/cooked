@@ -2,43 +2,274 @@
     <div class="navbar">
         <a href="/" class="logo">Cooked?</a>
 
-        {% if user.is_authenticated %}
-        <div class="nav-right">
-            <!-- Search bar -->
-            <form method="get" action="{% url 'public_feed' %}" class="search-form">
-                <input type="text" name="q" placeholder="Search confessions..." autocomplete="off">
-            </form>
+        <!-- Hamburger toggle (mobile only) -->
+        <button class="menu-toggle" aria-label="Toggle menu" aria-expanded="false">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
 
-            <!-- Navigation links with active state -->
+        <!-- Navigation content -->
+        <nav class="nav-menu">
+            {% if user.is_authenticated %}
+            <div class="nav-right">
+                <!-- Search (visible on desktop, in menu on mobile) -->
+                <form method="get" action="{% url 'public_feed' %}" class="search-form">
+                    <input type="text" name="q" placeholder="Search confessions..." autocomplete="off">
+                </form>
+
+                <div class="nav-links">
+                    <a href="{% url 'create_post' %}" 
+                       class="{% if request.resolver_match.url_name == 'create_post' %}active{% endif %}">
+                        Confess
+                    </a>
+                    <a href="{% url 'public_feed' %}" 
+                       class="{% if request.resolver_match.url_name == 'public_feed' %}active{% endif %}">
+                        Feed
+                    </a>
+                    <a href="{% url 'view_profile' %}" 
+                       class="{% if request.resolver_match.url_name == 'view_profile' %}active{% endif %}">
+                        Profile
+                    </a>
+                    <a href="{% url 'logoutuser' %}" class="logout-btn">Logout</a>
+                </div>
+            </div>
+            {% else %}
             <div class="nav-links">
-                <a href="{% url 'create_post' %}"
-                   class="{% if request.resolver_match.url_name == 'create_post' %}active{% endif %}">
-                    Confess
-                </a>
-
-                <a href="{% url 'public_feed' %}"
-                   class="{% if request.resolver_match.url_name == 'public_feed' %}active{% endif %}">
-                    Feed
-                </a>
-
-                <a href="{% url 'view_profile' %}"
-                   class="{% if request.resolver_match.url_name == 'view_profile' %}active{% endif %}">
-                    Profile
-                </a>
-
-                <a href="{% url 'logoutuser' %}" class="logout-btn">
-                    Logout
+                <a href="{% url 'loginget' %}" 
+                   class="{% if request.resolver_match.url_name == 'loginget' %}active{% endif %}">
+                    Login
                 </a>
             </div>
-        </div>
-
-        {% else %}
-        <div class="nav-links">
-            <a href="{% url 'loginget' %}"
-               class="{% if request.resolver_match.url_name == 'loginget' %}active{% endif %}">
-                Login
-            </a>
-        </div>
-        {% endif %}
+            {% endif %}
+        </nav>
     </div>
 </header>
+
+<style>
+    header {
+        background: linear-gradient(to bottom, rgba(20,20,30,0.95), transparent);
+        backdrop-filter: blur(12px);
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .navbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 1rem 5%;
+        position: relative;
+    }
+
+    .logo {
+        font-family: 'Orbitron', monospace;
+        font-size: clamp(1.8rem, 5vw, 2.3rem);
+        font-weight: 700;
+        color: var(--red);
+        text-decoration: none;
+        letter-spacing: -1px;
+        z-index: 10;
+    }
+
+    /* Hamburger Menu Button (mobile only) */
+    .menu-toggle {
+        display: none;
+        flex-direction: column;
+        justify-content: space-between;
+        width: 32px;
+        height: 24px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        z-index: 10;
+    }
+
+    .menu-toggle span {
+        width: 100%;
+        height: 3px;
+        background: var(--red);
+        border-radius: 2px;
+        transition: all 0.3s ease;
+    }
+
+    /* Mobile menu styles */
+    .nav-menu {
+        display: flex;
+        align-items: center;
+    }
+
+    .nav-right {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+    }
+
+    .search-form {
+        position: relative;
+    }
+
+    .search-form input {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 2rem;
+        padding: 0.7rem 1rem 0.7rem 2.8rem;
+        color: var(--text);
+        font-size: 0.95rem;
+        width: 240px;
+        transition: all 0.25s;
+    }
+
+    .search-form input:focus {
+        width: 280px;
+        border-color: var(--red);
+        box-shadow: 0 0 0 3px rgba(255,45,85,0.15);
+    }
+
+    .search-form::before {
+        content: "🔍";
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-muted);
+    }
+
+    .nav-links {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .nav-links a {
+        color: var(--text);
+        text-decoration: none;
+        font-weight: 500;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        transition: all 0.2s;
+        font-size: 0.95rem;
+    }
+
+    .nav-links a:hover,
+    .nav-links a:focus {
+        background: rgba(255,45,85,0.15);
+        color: var(--red);
+    }
+
+    .nav-links a.active {
+        background: rgba(255,45,85,0.3);
+        color: var(--red);
+        font-weight: 600;
+    }
+
+    .logout-btn {
+        background: rgba(255,45,85,0.2);
+        color: var(--red) !important;
+    }
+
+    .logout-btn:hover {
+        background: var(--red);
+        color: white !important;
+    }
+
+    /* Mobile Menu */
+    @media (max-width: 992px) {
+        .menu-toggle {
+            display: flex;
+        }
+
+        .nav-menu {
+            position: fixed;
+            top: 0;
+            right: -100%;
+            width: 80%;
+            max-width: 320px;
+            height: 100vh;
+            background: var(--bg-card);
+            flex-direction: column;
+            justify-content: flex-start;
+            padding: 5rem 2rem 2rem;
+            transition: right 0.4s ease;
+            z-index: 999;
+            border-left: 1px solid var(--border);
+        }
+
+        .nav-menu.active {
+            right: 0;
+        }
+
+        .nav-right {
+            flex-direction: column;
+            width: 100%;
+            gap: 1.5rem;
+        }
+
+        .search-form {
+            width: 100%;
+        }
+
+        .search-form input {
+            width: 100%;
+        }
+
+        .nav-links {
+            flex-direction: column;
+            width: 100%;
+            gap: 1rem;
+        }
+
+        .nav-links a {
+            width: 100%;
+            text-align: center;
+            padding: 1rem;
+            font-size: 1.1rem;
+        }
+
+        .logout-btn {
+            width: 100%;
+            text-align: center;
+        }
+    }
+
+    /* Hamburger Animation */
+    .menu-toggle[aria-expanded="true"] span:nth-child(1) {
+        transform: rotate(45deg) translate(6px, 6px);
+    }
+
+    .menu-toggle[aria-expanded="true"] span:nth-child(2) {
+        opacity: 0;
+    }
+
+    .menu-toggle[aria-expanded="true"] span:nth-child(3) {
+        transform: rotate(-45deg) translate(6px, -6px);
+    }
+</style>
+
+<script>
+// Hamburger menu toggle
+document.addEventListener('DOMContentLoaded', () => {
+    const toggle = document.querySelector('.menu-toggle');
+    const menu = document.querySelector('.nav-menu');
+
+    if (toggle && menu) {
+        toggle.addEventListener('click', () => {
+            const expanded = toggle.getAttribute('aria-expanded') === 'true';
+            toggle.setAttribute('aria-expanded', !expanded);
+            menu.classList.toggle('active');
+        });
+
+        // Close menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!menu.contains(e.target) && !toggle.contains(e.target)) {
+                toggle.setAttribute('aria-expanded', 'false');
+                menu.classList.remove('active');
+            }
+        });
+    }
+});
+</script>
