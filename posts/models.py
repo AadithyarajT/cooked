@@ -8,16 +8,12 @@ def default_expiry():
     return timezone.now() + timedelta(days=7)
 
 
-class Topic(models.Model):
-    name = models.CharField(max_length=50)
 
-    def __str__(self):
-        return self.name
 
 
 class Post(models.Model):
     created_by = models.ForeignKey(User, on_delete=models.CASCADE)
-    topic = models.ForeignKey(Topic, on_delete=models.SET_NULL, null=True)
+    topic = models.ForeignKey("admin_pannel.Topic", on_delete=models.SET_NULL, null=True)
     title = models.CharField(max_length=100)
     content = models.TextField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)

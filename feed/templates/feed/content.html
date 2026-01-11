@@ -4,7 +4,8 @@
 
 {% if user.is_authenticated %}
 <div class="post-detail-page">
-    <div class="post-card main-post">
+    <!-- Fixed top content (post + stats + rating) -->
+    <div class="main-post">
         <div class="post-meta">
             <span class="username">@{{ post.created_by.username }}</span>
             <span class="separator">•</span>
@@ -18,34 +19,31 @@
         </div>
 
         <h1 class="post-title">{{ post.title }}</h1>
+
         <div class="post-content">
             {{ post.content|linebreaks }}
         </div>
 
-        <!-- Stats Bar -->
+        <!-- Stats - compact grid -->
         <div class="stats-bar">
-            <div class="stat">
-                <div class="stat-value">{{ post.average_score|default:"—" }}</div>
-                <div class="stat-label">Average Score</div>
+            <div class="stat-item">
+                <span class="stat-value">{{ post.average_score|default:"—" }}</span>
+                <span class="stat-label">Avg Score</span>
             </div>
-            <div class="stat">
-                <div class="stat-value">{{ post.no_votes|default:0 }}</div>
-                <div class="stat-label">Total Votes</div>
+            <div class="stat-item">
+                <span class="stat-value">{{ post.no_votes|default:0 }}</span>
+                <span class="stat-label">Votes</span>
             </div>
-            <div class="stat">
-                <div class="stat-value">{{ post.total_score|default:0 }}</div>
-                <div class="stat-label">Total Points</div>
+            <div class="stat-item">
+                <span class="stat-value">{{ post.total_score|default:0 }}</span>
+                <span class="stat-label">Points</span>
             </div>
         </div>
 
-        <!-- Rating Section -->
+        <!-- Rating - always visible -->
         <div class="rating-section {% if post.is_expired %}expired{% endif %}">
             <h3 class="rating-title">
-                {% if post.is_expired %}
-                    Final Judgment 🔥
-                {% else %}
-                    Drop Your Verdict
-                {% endif %}
+                {% if post.is_expired %}Final Judgment 🔥{% else %}Your Verdict{% endif %}
             </h3>
 
             {% if not post.is_expired %}
@@ -59,42 +57,39 @@
                 </div>
 
                 {% if user_rating %}
-                <div class="current-rating">
-                    Your previous judgment: <strong>{{ user_rating.score }}</strong>
-                </div>
+                <div class="current-rating">Your last: <strong>{{ user_rating.score }}</strong></div>
                 {% endif %}
 
                 <button type="submit" class="btn btn-judge">
-                    {% if user_rating %}Update Judgment{% else %}Judge It{% endif %}
+                    {% if user_rating %}Update{% else %}Judge{% endif %}
                 </button>
             </form>
             {% else %}
             <div class="expired-message">
-                This confession has expired.<br>
-                Final score: <strong>{{ post.average_score|default:"—" }}</strong> from {{ post.no_votes|default:0 }} judgments
+                Expired • Final: <strong>{{ post.average_score|default:"—" }}</strong> / {{ post.no_votes|default:0 }} votes
             </div>
             {% endif %}
         </div>
     </div>
 
-    <!-- Comments Section -->
+    <!-- Scrollable comments only -->
     <div class="comments-section">
         <h2 class="section-title">Judgments & Roasts</h2>
 
         <form method="POST" class="comment-form">
             {% csrf_token %}
             <textarea name="content" placeholder="Drop your savage judgment..." rows="3" required></textarea>
-            <button type="submit" class="btn btn-comment">Post Roast</button>
+            <button type="submit" class="btn btn-comment">Post</button>
         </form>
 
-        <div class="comments-list">
+        <div class="comments-scroll">
             {% for comment in post.comments.all %}
             <div class="comment-item">
                 <div class="comment-header">
                     <span class="comment-author">@{{ comment.author.username }}</span>
                     <span class="comment-time">{{ comment.created_at|timesince }} ago</span>
                     {% if user == comment.author %}
-                    <a href="{% url 'delete_comment' comment.id %}" class="delete-comment">Delete</a>
+                    <a href="{% url 'delete_comment' comment.id %}" class="delete-link">Delete</a>
                     {% endif %}
                 </div>
                 <p class="comment-text">{{ comment.text|linebreaks }}</p>
@@ -108,18 +103,23 @@
 
 <style>
     .post-detail-page {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        background: var(--bg);
+        padding: clamp(1rem, 4vw, 2rem) 5%;
         max-width: 1100px;
-        margin: 2rem auto;
-        padding: 0 5%;
+        margin: 0 auto;
+        gap: clamp(1.5rem, 4vw, 2.5rem);
     }
 
+    /* Fixed top part (post + stats + rating) */
     .main-post {
         background: var(--bg-card);
         border: 1px solid var(--border);
         border-radius: 16px;
-        padding: 2.5rem;
-        margin-bottom: 3rem;
-        box-shadow: 0 15px 40px rgba(0,0,0,0.6);
+        padding: clamp(1.5rem, 4vw, 2.5rem);
+        box-shadow: 0 10px 35px rgba(0,0,0,0.5);
         transition: transform 0.3s;
     }
 
@@ -130,49 +130,48 @@
     .post-meta {
         display: flex;
         flex-wrap: wrap;
-        align-items: center;
         gap: 0.8rem;
         color: var(--text-muted);
-        font-size: 0.95rem;
-        margin-bottom: 1.5rem;
+        font-size: clamp(0.85rem, 3vw, 0.95rem);
+        margin-bottom: 1rem;
     }
 
-    .username { font-weight: 600; color: var(--text); }
+    .username { font-weight: 700; color: var(--text); }
     .topic { background: rgba(255,45,85,0.15); color: var(--red); padding: 0.2rem 0.8rem; border-radius: 20px; }
     .expired-badge { background: #c41e3b; color: white; padding: 0.2rem 0.8rem; border-radius: 20px; font-weight: 600; }
     .expires-in { color: #00ff9d; }
 
     .post-title {
         color: var(--red);
-        font-size: 2.4rem;
-        margin: 0 0 1.5rem;
-        line-height: 1.2;
+        font-size: clamp(1.8rem, 5.5vw, 2.6rem);
+        margin: 0 0 1.2rem;
+        line-height: 1.25;
     }
 
     .post-content {
         color: var(--text);
         line-height: 1.7;
-        font-size: 1.1rem;
+        font-size: clamp(1rem, 3.8vw, 1.15rem);
         margin-bottom: 2rem;
     }
 
     .stats-bar {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-        gap: 1.5rem;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 1.2rem;
         background: rgba(255,45,85,0.08);
-        padding: 1.5rem;
+        padding: 1.2rem;
         border-radius: 12px;
-        margin: 2rem 0;
+        margin: 1.5rem 0;
         border: 1px solid rgba(255,45,85,0.15);
     }
 
-    .stat {
+    .stat-item {
         text-align: center;
     }
 
     .stat-value {
-        font-size: 1.8rem;
+        font-size: clamp(1.4rem, 4.5vw, 1.8rem);
         font-weight: 700;
         color: var(--red);
     }
@@ -180,49 +179,48 @@
     .stat-label {
         color: var(--text-muted);
         font-size: 0.9rem;
-        margin-top: 0.4rem;
+        margin-top: 0.3rem;
     }
 
     .rating-section {
         background: rgba(255,45,85,0.12);
         border: 1px solid rgba(255,45,85,0.3);
         border-radius: 12px;
-        padding: 2rem;
-        margin: 2rem 0;
+        padding: 1.8rem;
+        margin: 1.5rem 0;
+        text-align: center;
     }
 
     .rating-section.expired {
         background: rgba(100,100,100,0.15);
         border-color: #444;
-        color: #aaa;
     }
 
     .rating-title {
         color: var(--red);
-        font-size: 1.6rem;
-        text-align: center;
-        margin-bottom: 1.5rem;
+        font-size: clamp(1.3rem, 4vw, 1.6rem);
+        margin-bottom: 1rem;
     }
 
     .rating-form {
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 1.5rem;
+        gap: 1.2rem;
     }
 
     .emoji-display {
-        font-size: 5rem;
-        margin: 1rem 0;
+        font-size: clamp(3.5rem, 12vw, 5rem);
+        margin: 0.8rem 0;
         transition: transform 0.3s;
     }
 
-    .emoji-display.animate { transform: scale(1.3); }
+    .emoji-display.animate { transform: scale(1.25); }
 
     #scoreSlider {
         width: 100%;
-        height: 10px;
-        border-radius: 5px;
+        height: 12px;
+        border-radius: 6px;
         background: linear-gradient(to right, #c41e3b 0%, #ff2d55 100%);
         outline: none;
         appearance: none;
@@ -230,16 +228,17 @@
 
     #scoreSlider::-webkit-slider-thumb {
         appearance: none;
-        width: 24px;
-        height: 24px;
+        width: 28px;
+        height: 28px;
         background: var(--red);
         border-radius: 50%;
         cursor: pointer;
         box-shadow: 0 0 15px rgba(255,45,85,0.6);
+        border: 2px solid var(--bg-card);
     }
 
     .score-display {
-        font-size: 2.2rem;
+        font-size: clamp(1.8rem, 6vw, 2.4rem);
         color: var(--red);
         font-weight: 700;
     }
@@ -250,48 +249,50 @@
     }
 
     .expired-message {
-        text-align: center;
-        font-size: 1.4rem;
-        color: #aaa;
+        font-size: 1.3rem;
+        color: var(--text-muted);
     }
 
     .btn-judge {
         background: var(--red);
         color: white;
         border: none;
-        padding: 1rem 2.5rem;
-        font-size: 1.1rem;
+        padding: 0.9rem 2.2rem;
+        font-size: clamp(1rem, 3.5vw, 1.1rem);
         font-weight: 600;
         border-radius: 50px;
         cursor: pointer;
+        min-height: 48px;
         transition: all 0.3s;
-        margin-top: 1rem;
     }
 
     .btn-judge:hover {
         transform: translateY(-3px);
-        box-shadow: 0 12px 25px rgba(255,45,85,0.5);
+        box-shadow: 0 10px 25px rgba(255,45,85,0.5);
     }
 
-    /* Comments Section */
+    /* Scrollable comments only */
     .comments-section {
+        flex: 1;
         background: var(--bg-card);
         border-radius: 16px;
-        padding: 2.5rem;
+        padding: clamp(1.5rem, 4vw, 2.5rem);
         border: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
     }
 
     .section-title {
         color: var(--red);
-        font-size: 1.8rem;
-        margin-bottom: 1.5rem;
+        font-size: clamp(1.4rem, 5vw, 1.8rem);
+        margin: 0;
     }
 
     .comment-form {
         display: flex;
         flex-direction: column;
         gap: 1rem;
-        margin-bottom: 2.5rem;
     }
 
     .comment-form textarea {
@@ -301,7 +302,7 @@
         padding: 1rem;
         color: var(--text);
         resize: vertical;
-        min-height: 100px;
+        min-height: 90px;
         font-size: 1.05rem;
     }
 
@@ -319,6 +320,7 @@
         font-weight: 600;
         cursor: pointer;
         align-self: flex-start;
+        min-height: 48px;
         transition: all 0.3s;
     }
 
@@ -326,10 +328,13 @@
         transform: translateY(-3px);
     }
 
-    .comments-list {
+    .comments-scroll {
+        flex: 1;
+        overflow-y: auto;
         display: flex;
         flex-direction: column;
-        gap: 1.5rem;
+        gap: 1.2rem;
+        padding-right: 0.4rem;
     }
 
     .comment-item {
@@ -345,6 +350,8 @@
         align-items: center;
         margin-bottom: 0.8rem;
         font-size: 0.95rem;
+        flex-wrap: wrap;
+        gap: 0.8rem;
     }
 
     .comment-author {
@@ -356,19 +363,20 @@
         color: var(--text-muted);
     }
 
-    .delete-comment {
+    .delete-link {
         color: var(--red);
         font-size: 0.9rem;
         text-decoration: none;
     }
 
-    .delete-comment:hover {
+    .delete-link:hover {
         text-decoration: underline;
     }
 
     .comment-text {
         color: var(--text);
         line-height: 1.6;
+        font-size: 1rem;
     }
 
     .no-comments {
@@ -376,6 +384,7 @@
         color: var(--text-muted);
         font-style: italic;
         padding: 2rem 0;
+        font-size: 1.1rem;
     }
 
     @keyframes flicker {
@@ -383,8 +392,57 @@
         50% { opacity: 0.75; }
     }
 
+    /* Mobile - everything larger & stacked */
     @media (max-width: 768px) {
-        .stats-bar { grid-template-columns: 1fr; }
+        .post-detail-page {
+            padding: 1rem 6%;
+            gap: 2rem;
+        }
+
+        .main-post {
+            padding: 1.8rem 1.6rem;
+        }
+
+        .post-title {
+            font-size: clamp(1.8rem, 7vw, 2.4rem);
+        }
+
+        .post-content {
+            font-size: 1.05rem;
+        }
+
+        .stats-bar {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        .rating-section {
+            padding: 1.5rem;
+        }
+
+        .comments-section {
+            padding: 1.8rem 1.6rem;
+        }
+
+        .section-title {
+            font-size: clamp(1.4rem, 6vw, 1.8rem);
+        }
+
+        .comment-form textarea {
+            min-height: 100px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .post-meta {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.6rem;
+        }
+
+        .post-preview, .comment-text {
+            font-size: 1rem;
+        }
     }
 </style>
 
@@ -394,16 +452,13 @@
     const scoreValue = document.getElementById('scoreValue');
 
     function getEmoji(score) {
-        if (score <= 10) return '😭';
-        if (score <= 20) return '😢';
-        if (score <= 30) return '😣';
-        if (score <= 40) return '😕';
-        if (score <= 50) return '😐';
-        if (score <= 60) return '🙂';
-        if (score <= 70) return '😏';
-        if (score <= 80) return '😎';
-        if (score <= 90) return '🤩';
-        return '🔥🔥';
+        if (score <= 10) return '🥶 COLD';
+        if (score <= 25) return '😨';
+        if (score <= 40) return '🙂';
+        if (score <= 55) return '😯';
+        if (score <= 70) return '😵';
+        if (score <= 85) return '🥵';
+        return '☠️';
     }
 
     if (slider) {
@@ -416,7 +471,7 @@
         }
 
         slider.addEventListener('input', updateEmoji);
-        updateEmoji(); // Initial
+        updateEmoji(); // Initial load
     }
 </script>
 

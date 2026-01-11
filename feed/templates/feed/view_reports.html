@@ -1,0 +1,321 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="reports-page">
+    <div class="reports-card">
+        <h1 class="reports-title">
+            <span class="flame">🔥</span> All Reports <span class="flame">🔥</span>
+        </h1>
+
+        <p class="reports-subtitle">
+            Confessions that crossed the line... or got too hot 🔥
+        </p>
+
+        {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} {{ message.tags }}-glow">
+                {{ message }}
+            </div>
+            {% endfor %}
+        {% endif %}
+
+        {% if reports %}
+        <div class="table-wrapper">
+            <table class="reports-table">
+                <thead>
+                    <tr>
+                        <th>Reporter</th>
+                        <th>Post</th>
+                        <th>Reason</th>
+                        <th>Reported</th>
+                        <th>Reply</th>
+                        {% if request.user.is_superuser or request.user.is_staff %}
+                        <th>Action</th>
+                        {% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for report in reports %}
+                    <tr>
+                        <td class="reporter">@{{ report.reporter.username }}</td>
+                        <td class="post-link">
+                            {% comment %} <a href="{% url 'feed_content' report.post_id %}"> {% endcomment %}
+                                {{ report.post_id }}
+                            {% comment %} </a> {% endcomment %}
+                        </td>
+                        <td class="reason">{{ report.reason|truncatewords:20 }}</td>
+                        <td class="time">{{ report.created_at|timesince }} ago</td>
+                        <td class="reply">
+                            {% if report.reply %}
+                                {{ report.reply|truncatewords:15 }}
+                            {% else %}
+                                <span class="no-reply">Pending</span>
+                            {% endif %}
+                        </td>
+                        {% if request.user.is_superuser or request.user.is_staff %}
+                        <td>
+                            <a href="{% url 'send_report_reply' report.id %}" 
+                               class="btn btn-reply">
+                                Reply
+                            </a>
+                        </td>
+                        {% endif %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="no-reports">
+            <p>No reports yet... the streets are clean 🔥</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+    .reports-page {
+        min-height: 100vh;
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        background: linear-gradient(135deg, #0f0f12 0%, #1a0005 100%);
+        padding: clamp(1.5rem, 5vw, 3rem) 5%;
+    }
+
+    .reports-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: clamp(1.8rem, 5vw, 3rem);
+        width: 100%;
+        max-width: 1200px;
+        box-shadow: 0 15px 45px rgba(0,0,0,0.6),
+                    0 0 35px rgba(255,45,85,0.15);
+        transition: transform 0.3s ease;
+    }
+
+    .reports-card:hover {
+        transform: translateY(-6px);
+    }
+
+    .reports-title {
+        font-family: 'Orbitron', monospace;
+        font-size: clamp(2.2rem, 7vw, 3.2rem);
+        font-weight: 900;
+        color: var(--red);
+        text-align: center;
+        margin-bottom: 0.8rem;
+        text-shadow: 0 0 25px rgba(255,45,85,0.5);
+        letter-spacing: -1px;
+    }
+
+    .flame {
+        animation: flicker 3s infinite alternate;
+    }
+
+    .reports-subtitle {
+        text-align: center;
+        color: var(--text-muted);
+        font-size: clamp(1rem, 3.5vw, 1.2rem);
+        margin-bottom: 2rem;
+        line-height: 1.4;
+    }
+
+    .table-wrapper {
+        overflow-x: auto;
+        margin: 1.5rem 0;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: rgba(20,20,30,0.5);
+    }
+
+    .reports-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 700px; /* horizontal scroll on very small screens */
+    }
+
+    th, td {
+        padding: clamp(0.8rem, 2vw, 1.2rem);
+        text-align: left;
+        border-bottom: 1px solid var(--border);
+        font-size: clamp(0.9rem, 3vw, 1rem);
+    }
+
+    th {
+        background: rgba(255,45,85,0.12);
+        color: var(--red);
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    tr:nth-child(even) {
+        background: rgba(255,45,85,0.03);
+    }
+
+    tr:hover {
+        background: rgba(255,45,85,0.1);
+        transition: background 0.2s;
+    }
+
+    .reporter {
+        font-weight: 600;
+        color: var(--text);
+    }
+
+    .post-link a {
+        color: var(--red);
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    .post-link a:hover {
+        text-decoration: underline;
+    }
+
+    .reason {
+        color: var(--text-muted);
+        max-width: 300px;
+        word-break: break-word;
+    }
+
+    .time {
+        color: var(--text-muted);
+        white-space: nowrap;
+    }
+
+    .reply {
+        color: var(--text);
+    }
+
+    .no-reply {
+        color: var(--text-muted);
+        font-style: italic;
+    }
+
+    .btn-reply {
+        background: var(--red);
+        color: white;
+        border: none;
+        padding: 0.6rem 1.3rem;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .btn-reply:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(255,45,85,0.4);
+    }
+
+    .no-reports {
+        text-align: center;
+        padding: 5rem 2rem;
+        color: var(--text-muted);
+        font-size: clamp(1.2rem, 5vw, 1.5rem);
+    }
+
+    @keyframes flicker {
+        0%, 100% { opacity: 1; text-shadow: 0 0 25px rgba(255,45,85,0.6); }
+        50% { opacity: 0.75; text-shadow: 0 0 12px rgba(255,45,85,0.3); }
+    }
+
+    /* Mobile adjustments */
+    @media (max-width: 768px) {
+        .reports-page {
+            padding: 1rem 6%;
+        }
+
+        .report-card {
+            padding: 2rem 1.8rem;
+        }
+
+        .reports-title {
+            font-size: clamp(2rem, 8vw, 2.8rem);
+        }
+
+        .reports-subtitle {
+            font-size: 1.1rem;
+        }
+
+        th, td {
+            padding: 0.8rem 1rem;
+            font-size: 0.9rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .reports-table {
+            font-size: 0.85rem;
+        }
+    }
+</style>
+
+{% endblock %}
+
+
+{% comment %} {% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<div>
+    <h1>Reports</h1>
+    <div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Reporter</th>
+                    <th>Post</th>
+                    <th>Reason</th>
+                    <th>Created At</th>
+                    <th>Reply</th>
+                    {%if request.user.is_superuser or request.user.is_staff %}
+                    <th>Send reply</th
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for report in reports %}
+                <tr>
+                    <td>{{ report.reporter }}</td>
+                    <td>{{ report.post_id }}</td>
+                    <td>{{ report.reason }}</td>
+                    <td>{{ report.created_at }}</td>
+                    <td>{{ report.reply }}</td>
+                    <td>
+                        {% if request.user.is_superuser or request.user.is_staff %}
+                        <a href="{% url 'send_report_reply' report.id %}" class="btn btn-report">Reply</a>
+                        {%endif%}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<style>
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    th, td {
+        padding: 0.5rem;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+    }
+
+    th {
+        background-color: #f2f2f2;
+    }
+</style>
+
+{% endblock %} {% endcomment %}
