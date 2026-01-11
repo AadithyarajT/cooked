@@ -7,4 +7,5 @@ urlpatterns = [
     path('', include('base.urls')),
     path('posts/', include('posts.urls')),
     path('feed/', include('feed.urls')),
+    path('admin_pannel/', include('admin_pannel.urls')),
 ]

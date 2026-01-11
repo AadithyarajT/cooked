@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
-from .models import Topic, Post, comments
+from .models import  Post, comments
 from .forms import PostForm
+from admin_pannel.models import Topic
 from django.contrib.auth.decorators import login_required
 
 

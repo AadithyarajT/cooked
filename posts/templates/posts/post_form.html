@@ -17,14 +17,6 @@
             {% endif %}
         </p>
 
-        {% if messages %}
-            {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} {{ message.tags }}-glow">
-                {{ message }}
-            </div>
-            {% endfor %}
-        {% endif %}
-
         <form method="POST" class="create-form">
             {% csrf_token %}
 

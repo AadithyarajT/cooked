@@ -1,7 +1,8 @@
 from django.shortcuts import redirect, render
 from django.contrib import messages
 from base import models
-from posts.models import Post, Topic
+from posts.models import Post
+from admin_pannel.models import Topic
 from django.db.models import Q
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
@@ -14,33 +15,75 @@ def loginget(request):
 
 # login page check
 
+from django.contrib.auth import authenticate, login
+from django.contrib import messages
+from django.shortcuts import render, redirect
+from django.contrib.auth.models import User
+
+
 def loginPage(request):
+    # If user is already logged in, redirect them
+    if request.user.is_authenticated:
+        return redirect("home")
+
     if request.method == "POST":
-        name = request.POST.get("username") or request.POST.get("email")
+        # Get credentials
+        username_or_email = request.POST.get("username") or request.POST.get("email")
         password = request.POST.get("password")
 
+        # Basic validation
+        if not username_or_email or not password:
+            messages.error(request, "Please provide both username/email and password")
+            return render(request, "base/login.html")
+
         user = None
+
         try:
-            if "@" in name:
-                user = authenticate(
-                    request,
-                    username=User.objects.get(email=name).username,
-                    password=password,
-                )
-            else:
-                user = authenticate(request, username=name, password=password)
-        except User.DoesNotExist:
-            messages.error(request, "User does not exist")
+            # First try to authenticate with username
+            user = authenticate(request, username=username_or_email, password=password)
+
+            # If that fails and input contains '@', try with email
+            if user is None and "@" in username_or_email:
+                try:
+                    # Get user by email
+                    user_by_email = User.objects.get(email=username_or_email)
+                    # Try authenticating with the username from that email
+                    user = authenticate(
+                        request, username=user_by_email.username, password=password
+                    )
+                except User.DoesNotExist:
+                    pass  # User with this email doesn't exist
+
+        except Exception as e:
+            # Log the error for debugging (in production, use proper logging)
+            print(f"Login error: {e}")
+            messages.error(request, "An error occurred during login")
             return render(request, "base/login.html")
 
+        # Check if authentication was successful
         if user is not None:
-            login(request, user)
-            return redirect("home")
-        else:
-            messages.error(request, "Username or password is incorrect")
-            return render(request, "base/login.html")
+            # User is valid, check if active
+            if user.is_active:
+                login(request, user)
 
+                # Add success message
+                messages.success(request, f"Welcome back, {user.username}!")
+
+                # Redirect based on user type
+                if user.is_staff or user.is_superuser:
+                    return redirect("admin_home")  # Make sure this URL exists
+                else:
+                    return redirect("home")  # Regular user home
+            else:
+                messages.error(request, "Your account is disabled")
+        else:
+            messages.error(request, "Invalid username/email or password")
+
+        return render(request, "base/login.html")
+
+    # GET request - show login form
     return render(request, "base/login.html")
+
 
 # register page
 def registergget(request):
@@ -145,3 +188,5 @@ def change_password(request):
             return redirect("login")
         
     return render(request, "base/changepassword.html")
+
+

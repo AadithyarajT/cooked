@@ -1,0 +1,330 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="reply-page">
+    <div class="reply-card">
+        <h1 class="reply-title">
+            <span class="flame">🔥</span> Send Reply <span class="flame">🔥</span>
+        </h1>
+
+        <p class="reply-subtitle">
+            Reply to reporter about confession #{{ report.post_id }}
+        </p>
+
+        {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} {{ message.tags }}-glow">
+                {{ message }}
+            </div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="POST" class="reply-form">
+            {% csrf_token %}
+
+            <!-- Quick pre-made replies -->
+            <div class="quick-replies">
+                <button type="button" class="quick-btn" 
+                        data-reply="Thanks for the report. We've reviewed it — no action needed at this time.">
+                    No violation
+                </button>
+                <button type="button" class="quick-btn" 
+                        data-reply="Thanks for reporting. The post has been removed for violating community guidelines.">
+                    Removed
+                </button>
+                <button type="button" class="quick-btn" 
+                        data-reply="Thanks for the report. The content is within guidelines — but we appreciate you keeping the feed clean!">
+                    Within rules
+                </button>
+                <button type="button" class="quick-btn" 
+                        data-reply="Warning issued to the poster. Thanks for helping maintain the vibe 🔥">
+                    Warning sent
+                </button>
+                <button type="button" class="quick-btn" 
+                        data-reply="Removed / Banned the poster. Thanks for helping maintain the vibe 🔥">
+                    Warning sent
+                </button>
+            </div>
+
+            <div class="form-group">
+                <label for="reply">Your Reply</label>
+                <textarea 
+                    name="reply" 
+                    id="reply" 
+                    placeholder="Write your response to the reporter..." 
+                    rows="5" 
+                    required
+                ></textarea>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-send">
+                    Send Reply
+                </button>
+                <a href="{% url 'view_reports' %}" class="btn btn-cancel">
+                    Cancel
+                </a>
+            </div>
+        </form>
+
+        <div class="reply-footer">
+            <a href="{% url 'view_reports' %}" class="back-link">← Back to Reports</a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .reply-page {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #0f0f12 0%, #1a0005 100%);
+        padding: clamp(1rem, 5vw, 2rem) 5%;
+    }
+
+    .reply-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: clamp(1.8rem, 5vw, 3rem);
+        width: 100%;
+        max-width: 720px;
+        box-shadow: 0 15px 45px rgba(0,0,0,0.6),
+                    0 0 35px rgba(255,45,85,0.15);
+        transition: transform 0.3s ease;
+    }
+
+    .reply-card:hover {
+        transform: translateY(-6px);
+    }
+
+    .reply-title {
+        font-family: 'Orbitron', monospace;
+        font-size: clamp(2.2rem, 7vw, 3.2rem);
+        font-weight: 900;
+        color: var(--red);
+        text-align: center;
+        margin-bottom: 0.8rem;
+        text-shadow: 0 0 25px rgba(255,45,85,0.5);
+        letter-spacing: -1px;
+    }
+
+    .flame {
+        animation: flicker 3s infinite alternate;
+    }
+
+    .reply-subtitle {
+        text-align: center;
+        color: var(--text-muted);
+        font-size: clamp(1rem, 3.5vw, 1.2rem);
+        margin-bottom: 2rem;
+        line-height: 1.4;
+    }
+
+    .quick-replies {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.8rem;
+        margin-bottom: 1.8rem;
+        justify-content: center;
+    }
+
+    .quick-btn {
+        background: rgba(255,45,85,0.15);
+        color: var(--red);
+        border: 1px solid rgba(255,45,85,0.3);
+        padding: 0.7rem 1.3rem;
+        border-radius: 10px;
+        font-size: clamp(0.85rem, 3vw, 0.95rem);
+        cursor: pointer;
+        transition: all 0.25s;
+        min-height: 44px;
+    }
+
+    .quick-btn:hover {
+        background: rgba(255,45,85,0.3);
+        transform: translateY(-2px);
+    }
+
+    .reply-form {
+        display: flex;
+        flex-direction: column;
+        gap: 1.6rem;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.6rem;
+    }
+
+    .form-group label {
+        color: var(--text);
+        font-weight: 600;
+        font-size: clamp(0.95rem, 3vw, 1.05rem);
+    }
+
+    .form-group textarea {
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 1rem 1.2rem;
+        color: var(--text);
+        font-size: clamp(0.95rem, 3.5vw, 1.05rem);
+        resize: vertical;
+        min-height: 120px;
+        max-height: 280px;
+        line-height: 1.6;
+        transition: border-color 0.25s, box-shadow 0.25s;
+    }
+
+    .form-group textarea:focus {
+        outline: none;
+        border-color: var(--red);
+        box-shadow: 0 0 0 3px rgba(255,45,85,0.2);
+    }
+
+    .form-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        justify-content: center;
+        margin-top: 1.2rem;
+    }
+
+    .btn {
+        padding: clamp(0.8rem, 3vw, 1rem) clamp(1.5rem, 4vw, 2.2rem);
+        font-size: clamp(0.95rem, 3.5vw, 1.1rem);
+        font-weight: 600;
+        border-radius: 50px;
+        cursor: pointer;
+        transition: all 0.3s;
+        border: none;
+        min-height: 48px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 140px;
+        text-align: center;
+    }
+
+    .btn-send {
+        background: var(--red);
+        color: white;
+    }
+
+    .btn-send:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px rgba(255,45,85,0.5);
+    }
+
+    .btn-cancel {
+        background: transparent;
+        border: 2px solid var(--red);
+        color: var(--red);
+    }
+
+    .btn-cancel:hover {
+        background: rgba(255,45,85,0.15);
+        transform: translateY(-3px);
+    }
+
+    .reply-footer {
+        text-align: center;
+        margin-top: 2rem;
+        color: var(--text-muted);
+        font-size: clamp(0.9rem, 3vw, 1rem);
+    }
+
+    .back-link {
+        color: var(--red);
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    .back-link:hover {
+        text-decoration: underline;
+    }
+
+    @keyframes flicker {
+        0%, 100% { opacity: 1; text-shadow: 0 0 25px rgba(255,45,85,0.6); }
+        50% { opacity: 0.75; text-shadow: 0 0 12px rgba(255,45,85,0.3); }
+    }
+
+    /* Mobile adjustments */
+    @media (max-width: 768px) {
+        .reply-page {
+            padding: 1rem 6%;
+        }
+
+        .reply-card {
+            padding: 2rem 1.8rem;
+        }
+
+        .reply-title {
+            font-size: clamp(2rem, 8vw, 2.8rem);
+        }
+
+        .quick-replies {
+            flex-direction: column;
+        }
+
+        .form-actions {
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .btn {
+            width: 100%;
+            max-width: 340px;
+        }
+    }
+</style>
+
+<script>
+// Quick reply buttons - fill textarea on click
+document.addEventListener('DOMContentLoaded', () => {
+    const textarea = document.querySelector('textarea[name="reply"]');
+    const quickButtons = document.querySelectorAll('.quick-btn');
+
+    if (!textarea) {
+        console.error("Reply textarea not found!");
+        return;
+    }
+
+    quickButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const replyText = btn.getAttribute('data-reply');
+            textarea.value = replyText;
+            textarea.focus();
+            // Optional: scroll to textarea on mobile
+            textarea.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        });
+    });
+});
+</script>
+
+{% endblock %}
+
+{% comment %} {% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<div class="report-page">
+    <div class="report-card">
+        <h1 class="report-title">
+            <span class="flame">🔥</span> Send Reply <span class="flame">🔥</span>
+        </h1>
+        <form method="POST">
+            {% csrf_token %}
+            <textarea name="reply" placeholder="Reply..." rows="3" required></textarea>
+            <button type="submit" class="btn btn-report">Send</button>
+        </form>
+        <p class="report-footer">
+            <a href="{% url 'view_reports' %}">Go back</a>
+            <a href="{% url 'view_reports' %}">View Reports</a>
+        </p>
+    </div>
+</div>
+{% endblock %}  {% endcomment %}

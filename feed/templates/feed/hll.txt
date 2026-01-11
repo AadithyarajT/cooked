@@ -1,0 +1,1314 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="shorts-layout">
+    <!-- LEFT SIDE: Scrollable Feed -->
+    <aside class="feed-sidebar">
+        <h1 class="feed-title">Public Feed</h1>
+        
+        <div class="shorts-feed">
+            {% for post in posts %}
+            <article class="short-card {% if forloop.first %}active{% endif %}" 
+                     data-post-id="{{ post.id }}">
+                <div class="short-header">
+                    <div class="short-header-left">
+                        <span class="username">@{{ post.created_by.username }}</span>
+                        <span class="timestamp">{{ post.created_at|timesince }} ago</span>
+                    </div>
+                    <div class="short-header-right">
+                        <button class="menu-toggle" onclick="toggleMenu(event, {{ post.id }})" aria-label="Post options">
+                            ⋮
+                        </button>
+                        <div class="context-menu" id="menu-{{ post.id }}">
+                            <button class="menu-item" onclick="sharePost({{ post.id }}, '{{ post.title|escapejs }}')">
+                                <span class="menu-icon">🔗</span>
+                                Share
+                            </button>
+                            <button class="menu-item" onclick="reportPost({{ post.id }})">
+                                <span class="menu-icon">⚠️</span>
+                                Report
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="short-body" onclick="loadPostInline({{ post.id }})">
+                    <h2 class="short-title">{{ post.title }}</h2>
+
+                    <div class="short-preview">
+                        {{ post.content|truncatewords:30|linebreaksbr }}
+                    </div>
+
+                    <div class="short-meta">
+                        <span class="topic-tag">{{ post.topic.name|default:"General" }}</span>
+                        <span class="vote-count">{{ post.no_votes }} votes</span>
+                    </div>
+                </div>
+
+                <a href="{% url 'feed_content' post.id %}" class="btn-details">View Details</a>
+            </article>
+            {% empty %}
+            <div class="empty-state">
+                <p>No confessions yet...</p>
+                <p>Be the first to get <strong>cooked</strong>! 😈</p>
+                {% if user.is_authenticated %}
+                <a href="{% url 'create_post' %}" class="btn btn-start">Confess Now</a>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </aside>
+
+    <!-- RIGHT SIDE: Post Detail -->
+    <main class="content-area">
+        <div id="post-detail-container">
+            {% if posts %}
+                {% with posts.0 as post %}
+                <div class="post-detail" id="post-{{ post.id }}">
+                    <div class="post-header-bar">
+                        <div class="post-meta">
+                            <span class="username">@{{ post.created_by.username }}</span>
+                            <span class="separator">•</span>
+                            <span class="topic">{{ post.topic.name|default:"Uncategorized" }}</span>
+                            <span class="time">• {{ post.created_at|timesince }} ago</span>
+                        </div>
+                        
+                        {% if post.created_by == user %}
+                        <div class="post-actions">
+                            <a href="{% url 'update_post' post.id %}" class="action-btn">Edit</a>
+                            <a href="{% url 'delete_post' post.id %}" class="action-btn delete"
+                               onclick="return confirm('Delete forever? 🔥');">Delete</a>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <h1 class="post-title">{{ post.title }}</h1>
+                    
+                    <div class="post-content">
+                        {{ post.content|linebreaks }}
+                    </div>
+
+                    <div class="expiry-info">
+                        {% if post.is_expired %}
+                            <span class="expired-badge">EXPIRED</span>
+                        {% else %}
+                            <span class="expires-in">Expires {{ post.expires_at|timeuntil }}</span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Stats Bar -->
+                    <div class="stats-bar">
+                        <div class="stat">
+                            <div class="stat-value" id="avgScore">{{ post.average_score|default:"—" }}</div>
+                            <div class="stat-label">Average Score</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-value" id="noVotes">{{ post.no_votes|default:0 }}</div>
+                            <div class="stat-label">Total Votes</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-value" id="totalScore">{{ post.total_score|default:0 }}</div>
+                            <div class="stat-label">Total Points</div>
+                        </div>
+                    </div>
+
+                    <!-- Rating Section -->
+                    <div class="rating-section {% if post.is_expired %}expired{% endif %}">
+                        <h3 class="rating-title">
+                            {% if post.is_expired %}
+                                Final Judgment 🔥
+                            {% else %}
+                                Drop Your Verdict
+                            {% endif %}
+                        </h3>
+
+                        {% if not post.is_expired %}
+                        <form id="ratingForm" class="rating-form" onsubmit="submitRating(event, {{ post.id }})">
+                            <div class="emoji-display" id="emojiDisplay">😐</div>
+                            <input type="range" name="score" id="scoreSlider" min="1" max="100" value="{% if user_rating %}{{ user_rating.score }}{% else %}50{% endif %}">
+                            <div class="score-display">
+                                <span id="scoreValue">{% if user_rating %}{{ user_rating.score }}{% else %}50{% endif %}</span>/100
+                            </div>
+                            {% if user_rating %}
+                            <div class="current-rating">Your previous judgment: <strong>{{ user_rating.score }}</strong></div>
+                            {% endif %}
+                            <button type="submit" class="btn btn-judge">
+                                {% if user_rating %}Update Judgment{% else %}Judge It{% endif %}
+                            </button>
+                        </form>
+                        {% else %}
+                        <div class="expired-message">
+                            This confession has expired.<br>
+                            Final score: <strong>{{ post.average_score|default:"—" }}</strong> from {{ post.no_votes|default:0 }} judgments
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Comments Section -->
+                    <div class="comments-section">
+                        <h2 class="section-title">Judgments & Roasts ({{ post.comments.count }})</h2>
+
+                        <form id="commentForm" class="comment-form" onsubmit="submitComment(event, {{ post.id }})">
+                            <textarea name="content" placeholder="Drop your savage judgment..." rows="3" required></textarea>
+                            <button type="submit" class="btn btn-comment">Post Roast</button>
+                        </form>
+
+                        <div class="comments-list" id="commentsList">
+                            {% for comment in post.comments.all %}
+                            <div class="comment-item">
+                                <div class="comment-header">
+                                    <span class="comment-author">@{{ comment.author.username }}</span>
+                                    <span class="comment-time">{{ comment.created_at|timesince }} ago</span>
+                                    {% if user == comment.author %}
+                                    <a href="{% url 'delete_comment' comment.id %}" class="delete-comment">Delete</a>
+                                    {% endif %}
+                                </div>
+                                <p class="comment-text">{{ comment.text|linebreaks }}</p>
+                            </div>
+                            {% empty %}
+                            <p class="no-comments">No judgments yet... be the first to roast! 😈</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% endwith %}
+            {% else %}
+                <div class="no-post-selected">
+                    <p>Select a post from the feed to view details</p>
+                </div>
+            {% endif %}
+        </div>
+    </main>
+</div>
+
+<style>
+    /* Prevent body scroll */
+    body {
+        overflow: hidden;
+        margin: 0;
+        padding: 0;
+    }
+
+    /* Main Layout */
+    .shorts-layout {
+        display: grid;
+        grid-template-columns: 380px 1fr;
+        height: 100vh;
+        max-height: 100vh;
+        overflow: hidden;
+        background: var(--bg);
+    }
+
+    /* LEFT SIDEBAR: Feed */
+    .feed-sidebar {
+        background: var(--bg-card);
+        border-right: 1px solid rgba(255,45,85,0.15);
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        overflow: hidden;
+    }
+
+    .feed-title {
+        font-family: 'Orbitron', monospace;
+        text-align: center;
+        color: var(--red);
+        font-size: 1.5rem;
+        margin: 0;
+        padding: 1.2rem 1rem;
+        font-weight: 700;
+        letter-spacing: -0.5px;
+        flex-shrink: 0;
+        border-bottom: 1px solid rgba(255,45,85,0.1);
+        background: var(--bg);
+    }
+
+    .shorts-feed {
+        flex: 1;
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding: 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.8rem;
+        
+        /* Custom scrollbar */
+        scrollbar-width: thin;
+        scrollbar-color: var(--red) rgba(30,30,40,0.7);
+    }
+
+    .shorts-feed::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .shorts-feed::-webkit-scrollbar-track {
+        background: rgba(30,30,40,0.7);
+    }
+
+    .shorts-feed::-webkit-scrollbar-thumb {
+        background: var(--red);
+        border-radius: 3px;
+    }
+
+    .short-card {
+        background: var(--bg);
+        border: 2px solid rgba(255,45,85,0.15);
+        border-radius: 12px;
+        padding: 1.2rem;
+        transition: all 0.25s ease;
+        flex-shrink: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.8rem;
+    }
+
+    .short-card:hover {
+        border-color: var(--red);
+        transform: translateX(4px);
+        box-shadow: 0 4px 20px rgba(255,45,85,0.2);
+    }
+
+    .short-card.active {
+        border-color: var(--red);
+        background: rgba(255,45,85,0.08);
+        box-shadow: 0 4px 20px rgba(255,45,85,0.3);
+    }
+
+    .short-body {
+        cursor: pointer;
+        flex: 1;
+    }
+
+    .short-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.7rem;
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        position: relative;
+    }
+
+    .short-header-left {
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        flex-wrap: wrap;
+    }
+
+    .short-header-right {
+        position: relative;
+        flex-shrink: 0;
+    }
+
+    .menu-toggle {
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        font-size: 1.5rem;
+        cursor: pointer;
+        padding: 0.3rem 0.5rem;
+        border-radius: 6px;
+        transition: all 0.2s;
+        line-height: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .menu-toggle:hover {
+        background: rgba(255,45,85,0.1);
+        color: var(--red);
+    }
+
+    .context-menu {
+        position: absolute;
+        top: calc(100% + 5px);
+        right: 0;
+        background: var(--bg-card);
+        border: 1px solid rgba(255,45,85,0.3);
+        border-radius: 8px;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+        min-width: 150px;
+        z-index: 1000;
+        display: none;
+        overflow: hidden;
+    }
+
+    .context-menu.show {
+        display: block;
+        animation: slideDown 0.2s ease;
+    }
+
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .menu-item {
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        width: 100%;
+        padding: 0.8rem 1rem;
+        background: none;
+        border: none;
+        color: var(--text);
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-align: left;
+        font-family: inherit;
+    }
+
+    .menu-item:hover {
+        background: rgba(255,45,85,0.1);
+        color: var(--red);
+    }
+
+    .menu-item:not(:last-child) {
+        border-bottom: 1px solid rgba(255,45,85,0.1);
+    }
+
+    .menu-icon {
+        font-size: 1.1rem;
+        width: 20px;
+        text-align: center;
+    }
+
+    .username {
+        font-weight: 700;
+        color: var(--text);
+    }
+
+    .short-title {
+        color: var(--red);
+        font-size: 1.15rem;
+        line-height: 1.3;
+        margin: 0 0 0.7rem;
+        font-weight: 700;
+    }
+
+    .short-preview {
+        color: var(--text);
+        line-height: 1.5;
+        font-size: 0.95rem;
+        margin-bottom: 0.8rem;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .short-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.85rem;
+    }
+
+    .topic-tag {
+        background: rgba(255,45,85,0.18);
+        color: var(--red);
+        padding: 0.2rem 0.7rem;
+        border-radius: 20px;
+        font-weight: 500;
+        font-size: 0.8rem;
+    }
+
+    .vote-count {
+        color: var(--text-muted);
+        font-size: 0.85rem;
+    }
+
+    .btn-details {
+        background: var(--red);
+        color: white;
+        text-decoration: none;
+        padding: 0.6rem 1.2rem;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        text-align: center;
+        transition: all 0.3s;
+        display: block;
+    }
+
+    .btn-details:hover {
+        background: #ff4567;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(255,45,85,0.4);
+    }
+
+    /* RIGHT SIDE: Content Area */
+    .content-area {
+        overflow: hidden;
+        height: 100vh;
+        background: var(--bg);
+        display: flex;
+        flex-direction: column;
+    }
+
+    .post-detail {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 2rem;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        overflow: hidden;
+    }
+
+    .post-header-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+        flex-shrink: 0;
+    }
+
+    .post-meta {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.6rem;
+        color: var(--text-muted);
+        font-size: 0.95rem;
+    }
+
+    .separator { color: var(--text-muted); }
+    .topic {
+        background: rgba(255,45,85,0.15);
+        color: var(--red);
+        padding: 0.2rem 0.8rem;
+        border-radius: 20px;
+        font-weight: 500;
+    }
+
+    .post-actions {
+        display: flex;
+        gap: 0.8rem;
+    }
+
+    .action-btn {
+        color: var(--text-muted);
+        text-decoration: none;
+        font-size: 0.9rem;
+        padding: 0.4rem 0.9rem;
+        border-radius: 6px;
+        transition: all 0.2s;
+        font-weight: 500;
+    }
+
+    .action-btn:hover {
+        color: #00ff9d;
+        background: rgba(0,255,157,0.1);
+    }
+
+    .action-btn.delete:hover {
+        color: var(--red);
+        background: rgba(255,45,85,0.15);
+    }
+
+    .post-title {
+        color: var(--red);
+        font-size: 2.2rem;
+        margin: 0 0 1rem;
+        line-height: 1.2;
+        font-weight: 700;
+        flex-shrink: 0;
+    }
+
+    .post-content {
+        color: var(--text);
+        line-height: 1.7;
+        font-size: 1.1rem;
+        margin-bottom: 1rem;
+        flex-shrink: 0;
+    }
+
+    .expiry-info {
+        margin-bottom: 1rem;
+        font-size: 0.95rem;
+        flex-shrink: 0;
+    }
+
+    .expired-badge {
+        background: #c41e3b;
+        color: white;
+        padding: 0.3rem 0.9rem;
+        border-radius: 20px;
+        font-weight: 600;
+    }
+
+    .expires-in {
+        color: #00ff9d;
+        font-weight: 500;
+    }
+
+    .stats-bar {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.5rem;
+        background: rgba(255,45,85,0.08);
+        padding: 1.5rem;
+        border-radius: 12px;
+        margin: 1.5rem 0;
+        border: 1px solid rgba(255,45,85,0.15);
+        flex-shrink: 0;
+    }
+
+    .stat {
+        text-align: center;
+    }
+
+    .stat-value {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--red);
+    }
+
+    .stat-label {
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        margin-top: 0.3rem;
+    }
+
+    .rating-section {
+        background: rgba(255,45,85,0.12);
+        border: 1px solid rgba(255,45,85,0.3);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin: 1.5rem 0;
+        flex-shrink: 0;
+    }
+
+    .rating-section.expired {
+        background: rgba(100,100,100,0.15);
+        border-color: #444;
+    }
+
+    .rating-title {
+        color: var(--red);
+        font-size: 1.3rem;
+        text-align: center;
+        margin-bottom: 1rem;
+        font-weight: 700;
+    }
+
+    .rating-form {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .emoji-display {
+        font-size: 3.5rem;
+        margin: 0.3rem 0;
+        transition: transform 0.3s;
+    }
+
+    .emoji-display.animate {
+        transform: scale(1.2);
+    }
+
+    #scoreSlider {
+        width: 100%;
+        max-width: 400px;
+        height: 10px;
+        border-radius: 5px;
+        background: linear-gradient(to right, #c41e3b 0%, #ff2d55 100%);
+        outline: none;
+        appearance: none;
+    }
+
+    #scoreSlider::-webkit-slider-thumb {
+        appearance: none;
+        width: 24px;
+        height: 24px;
+        background: var(--red);
+        border-radius: 50%;
+        cursor: pointer;
+        box-shadow: 0 0 15px rgba(255,45,85,0.6);
+    }
+
+    #scoreSlider::-moz-range-thumb {
+        width: 24px;
+        height: 24px;
+        background: var(--red);
+        border-radius: 50%;
+        cursor: pointer;
+        border: none;
+        box-shadow: 0 0 15px rgba(255,45,85,0.6);
+    }
+
+    .score-display {
+        font-size: 1.6rem;
+        color: var(--red);
+        font-weight: 700;
+    }
+
+    .expired-message {
+        text-align: center;
+        font-size: 1.1rem;
+        color: #aaa;
+        line-height: 1.6;
+    }
+
+    .btn-judge {
+        background: var(--red);
+        color: white;
+        border: none;
+        padding: 0.8rem 2rem;
+        font-size: 1rem;
+        font-weight: 600;
+        border-radius: 50px;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .btn-judge:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 25px rgba(255,45,85,0.5);
+    }
+
+    /* Comments Section */
+    .comments-section {
+        background: var(--bg-card);
+        border-radius: 12px;
+        padding: 1.5rem;
+        border: 1px solid rgba(255,45,85,0.15);
+        margin-top: 1.5rem;
+        flex: 1;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    .section-title {
+        color: var(--red);
+        font-size: 1.3rem;
+        margin-bottom: 1rem;
+        font-weight: 700;
+        flex-shrink: 0;
+    }
+
+    .comment-form {
+        display: flex;
+        flex-direction: column;
+        gap: 0.8rem;
+        margin-bottom: 1.5rem;
+        flex-shrink: 0;
+    }
+
+    .comment-form textarea {
+        background: var(--bg);
+        border: 1px solid rgba(255,45,85,0.15);
+        border-radius: 10px;
+        padding: 1rem;
+        color: var(--text);
+        resize: none;
+        height: 80px;
+        font-size: 1rem;
+        font-family: inherit;
+    }
+
+    .comment-form textarea:focus {
+        outline: none;
+        border-color: var(--red);
+        box-shadow: 0 0 0 3px rgba(255,45,85,0.2);
+    }
+
+    .btn-comment {
+        background: var(--red);
+        color: white;
+        border: none;
+        padding: 0.7rem 1.5rem;
+        border-radius: 50px;
+        font-weight: 600;
+        cursor: pointer;
+        align-self: flex-start;
+        transition: all 0.3s;
+        font-size: 0.95rem;
+    }
+
+    .btn-comment:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(255,45,85,0.4);
+    }
+
+    .comments-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        overflow-y: auto;
+        overflow-x: hidden;
+        flex: 1;
+        padding-right: 0.5rem;
+        
+        /* Custom scrollbar */
+        scrollbar-width: thin;
+        scrollbar-color: var(--red) rgba(30,30,40,0.7);
+    }
+
+    .comments-list::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .comments-list::-webkit-scrollbar-track {
+        background: rgba(30,30,40,0.7);
+        border-radius: 3px;
+    }
+
+    .comments-list::-webkit-scrollbar-thumb {
+        background: var(--red);
+        border-radius: 3px;
+    }
+
+    .comment-item {
+        background: rgba(255,45,85,0.05);
+        border-left: 4px solid var(--red);
+        padding: 1rem 1.2rem;
+        border-radius: 8px;
+        flex-shrink: 0;
+    }
+
+    .comment-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.7rem;
+        font-size: 0.9rem;
+    }
+
+    .comment-author {
+        font-weight: 600;
+        color: var(--text);
+    }
+
+    .comment-time {
+        color: var(--text-muted);
+    }
+
+    .delete-comment {
+        color: var(--red);
+        font-size: 0.85rem;
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    .delete-comment:hover {
+        text-decoration: underline;
+    }
+
+    .comment-text {
+        color: var(--text);
+        line-height: 1.6;
+        margin: 0;
+    }
+
+    .no-comments {
+        text-align: center;
+        color: var(--text-muted);
+        font-style: italic;
+        padding: 1.5rem 0;
+    }
+
+    .no-post-selected {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        color: var(--text-muted);
+        font-size: 1.3rem;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1.5rem;
+        color: var(--text-muted);
+    }
+
+    .empty-state p {
+        font-size: 1.1rem;
+        margin: 0.8rem 0;
+    }
+
+    .empty-state strong {
+        color: var(--red);
+    }
+
+    .btn-start {
+        display: inline-block;
+        background: var(--red);
+        color: white;
+        padding: 0.9rem 2rem;
+        border-radius: 50px;
+        text-decoration: none;
+        font-weight: 700;
+        font-size: 1rem;
+        margin-top: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .btn-start:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px rgba(255,45,85,0.4);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 1024px) {
+        .shorts-layout {
+            grid-template-columns: 320px 1fr;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .shorts-layout {
+            grid-template-columns: 1fr;
+        }
+
+        .feed-sidebar {
+            display: none;
+        }
+
+        .post-detail {
+            padding: 1.5rem 1rem;
+        }
+
+        .stats-bar {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        .post-title {
+            font-size: 1.8rem;
+        }
+    }
+</style>
+
+<script>
+    // Get CSRF token for AJAX requests
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    const csrftoken = getCookie('csrftoken');
+
+    // Context Menu Functions
+    function toggleMenu(event, postId) {
+        event.stopPropagation();
+        const menu = document.getElementById(`menu-${postId}`);
+        const allMenus = document.querySelectorAll('.context-menu');
+        
+        // Close all other menus
+        allMenus.forEach(m => {
+            if (m !== menu) {
+                m.classList.remove('show');
+            }
+        });
+        
+        // Toggle current menu
+        menu.classList.toggle('show');
+    }
+
+    // Close menus when clicking outside
+    document.addEventListener('click', function(event) {
+        if (!event.target.closest('.menu-toggle') && !event.target.closest('.context-menu')) {
+            const allMenus = document.querySelectorAll('.context-menu');
+            allMenus.forEach(menu => menu.classList.remove('show'));
+        }
+    });
+
+    function sharePost(postId, postTitle) {
+        const url = window.location.origin + `/feed/${postId}/`;
+        
+        // Check if Web Share API is available (mobile)
+        if (navigator.share) {
+            navigator.share({
+                title: postTitle,
+                text: `Check out this confession: ${postTitle}`,
+                url: url
+            }).then(() => {
+                console.log('Shared successfully');
+            }).catch((error) => {
+                console.log('Share failed:', error);
+                fallbackShare(url);
+            });
+        } else {
+            fallbackShare(url);
+        }
+        
+        // Close menu
+        document.getElementById(`menu-${postId}`).classList.remove('show');
+    }
+
+    function fallbackShare(url) {
+        // Copy to clipboard
+        navigator.clipboard.writeText(url).then(() => {
+            alert('Link copied to clipboard! 📋');
+        }).catch(() => {
+            // Fallback for older browsers
+            const textArea = document.createElement('textarea');
+            textArea.value = url;
+            textArea.style.position = 'fixed';
+            textArea.style.opacity = '0';
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                alert('Link copied to clipboard! 📋');
+            } catch (err) {
+                alert('Failed to copy link');
+            }
+            document.body.removeChild(textArea);
+        });
+    }
+
+    function reportPost(postId) {
+        const reason = prompt('Why are you reporting this post?\n\nOptions:\n1. Spam\n2. Inappropriate content\n3. Harassment\n4. Misinformation\n5. Other\n\nEnter the number or describe the issue:');
+        
+        if (reason && reason.trim()) {
+            // Here you would send the report to your backend
+            // For now, we'll just show a confirmation
+            alert('Thank you for your report. We will review this post shortly. 🛡️');
+            
+            // TODO: Send to backend
+            // fetch(`/api/post/${postId}/report/`, {
+            //     method: 'POST',
+            //     headers: {
+            //         'X-CSRFToken': csrftoken,
+            //         'Content-Type': 'application/json'
+            //     },
+            //     body: JSON.stringify({ reason: reason })
+            // });
+        }
+        
+        // Close menu
+        document.getElementById(`menu-${postId}`).classList.remove('show');
+    }
+
+    // Emoji slider functionality
+    const slider = document.getElementById('scoreSlider');
+    const emojiDisplay = document.getElementById('emojiDisplay');
+    const scoreValue = document.getElementById('scoreValue');
+
+    function getEmoji(score) {
+        if (score <= 10) return '😭';
+        if (score <= 20) return '😢';
+        if (score <= 30) return '😣';
+        if (score <= 40) return '😕';
+        if (score <= 50) return '😐';
+        if (score <= 60) return '🙂';
+        if (score <= 70) return '😏';
+        if (score <= 80) return '😎';
+        if (score <= 90) return '🤩';
+        return '🔥🔥';
+    }
+
+    if (slider) {
+        function updateEmoji() {
+            const score = parseInt(slider.value);
+            scoreValue.textContent = score;
+            emojiDisplay.textContent = getEmoji(score);
+            emojiDisplay.classList.add('animate');
+            setTimeout(() => emojiDisplay.classList.remove('animate'), 300);
+        }
+
+        slider.addEventListener('input', updateEmoji);
+        updateEmoji();
+    }
+
+    // Handle post card clicks - load inline without redirect
+    let currentPostId = {{ posts.0.id|default:0 }};
+    
+    function loadPostInline(postId) {
+        if (currentPostId === postId) return; // Already loaded
+        
+        // Remove active class from all cards
+        document.querySelectorAll('.short-card').forEach(card => {
+            card.classList.remove('active');
+        });
+        
+        // Add active class to clicked card
+        const clickedCard = document.querySelector(`[data-post-id="${postId}"]`);
+        if (clickedCard) {
+            clickedCard.classList.add('active');
+        }
+        
+        currentPostId = postId;
+        
+        // Fetch post data
+        fetch(`/api/post/${postId}/`)
+            .then(response => response.json())
+            .then(data => {
+                updatePostDetail(data);
+            })
+            .catch(error => {
+                console.error('Error loading post:', error);
+            });
+    }
+    
+    function updatePostDetail(data) {
+        const container = document.getElementById('post-detail-container');
+        
+        // Build expiry HTML
+        let expiryHTML = '';
+        if (data.is_expired) {
+            expiryHTML = '<span class="expired-badge">EXPIRED</span>';
+        } else if (data.expires_at) {
+            expiryHTML = `<span class="expires-in">Expires ${data.expires_at}</span>`;
+        }
+        
+        // Build action buttons HTML
+        let actionsHTML = '';
+        if (data.can_edit) {
+            actionsHTML = `
+                <div class="post-actions">
+                    <a href="/post/${data.id}/update/" class="action-btn">Edit</a>
+                    <a href="/post/${data.id}/delete/" class="action-btn delete"
+                       onclick="return confirm('Delete forever? 🔥');">Delete</a>
+                </div>
+            `;
+        }
+        
+        // Build rating section HTML
+        let ratingHTML = '';
+        if (data.is_expired) {
+            ratingHTML = `
+                <div class="expired-message">
+                    This confession has expired.<br>
+                    Final score: <strong>${data.average_score || '—'}</strong> from ${data.no_votes || 0} judgments
+                </div>
+            `;
+        } else {
+            const currentScore = data.user_rating || 50;
+            ratingHTML = `
+                <form id="ratingForm" class="rating-form" onsubmit="submitRating(event, ${data.id})">
+                    <div class="emoji-display" id="emojiDisplay">${getEmoji(currentScore)}</div>
+                    <input type="range" name="score" id="scoreSlider" min="1" max="100" value="${currentScore}">
+                    <div class="score-display">
+                        <span id="scoreValue">${currentScore}</span>/100
+                    </div>
+                    ${data.user_rating ? `<div class="current-rating">Your previous judgment: <strong>${data.user_rating}</strong></div>` : ''}
+                    <button type="submit" class="btn btn-judge">
+                        ${data.user_rating ? 'Update Judgment' : 'Judge It'}
+                    </button>
+                </form>
+            `;
+        }
+        
+        // Build comments HTML
+        let commentsHTML = '';
+        if (data.comments && data.comments.length > 0) {
+            commentsHTML = data.comments.map(comment => `
+                <div class="comment-item">
+                    <div class="comment-header">
+                        <span class="comment-author">@${comment.author}</span>
+                        <span class="comment-time">${comment.created_at}</span>
+                        ${comment.is_author ? `<a href="/comment/${comment.id}/delete/" class="delete-comment">Delete</a>` : ''}
+                    </div>
+                    <p class="comment-text">${comment.text}</p>
+                </div>
+            `).join('');
+        } else {
+            commentsHTML = '<p class="no-comments">No judgments yet... be the first to roast! 😈</p>';
+        }
+        
+        // Update the entire post detail section
+        container.innerHTML = `
+            <div class="post-detail" id="post-${data.id}">
+                <div class="post-header-bar">
+                    <div class="post-meta">
+                        <span class="username">@${data.username}</span>
+                        <span class="separator">•</span>
+                        <span class="topic">${data.topic}</span>
+                        <span class="time">• ${data.created_at}</span>
+                    </div>
+                    ${actionsHTML}
+                </div>
+
+                <h1 class="post-title">${data.title}</h1>
+                
+                <div class="post-content">
+                    ${data.content}
+                </div>
+
+                <div class="expiry-info">
+                    ${expiryHTML}
+                </div>
+
+                <!-- Stats Bar -->
+                <div class="stats-bar">
+                    <div class="stat">
+                        <div class="stat-value" id="avgScore">${data.average_score || '—'}</div>
+                        <div class="stat-label">Average Score</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value" id="noVotes">${data.no_votes || 0}</div>
+                        <div class="stat-label">Total Votes</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value" id="totalScore">${data.total_score || 0}</div>
+                        <div class="stat-label">Total Points</div>
+                    </div>
+                </div>
+
+                <!-- Rating Section -->
+                <div class="rating-section ${data.is_expired ? 'expired' : ''}">
+                    <h3 class="rating-title">
+                        ${data.is_expired ? 'Final Judgment 🔥' : 'Drop Your Verdict'}
+                    </h3>
+                    ${ratingHTML}
+                </div>
+
+                <!-- Comments Section -->
+                <div class="comments-section">
+                    <h2 class="section-title">Judgments & Roasts (${data.comments_count})</h2>
+
+                    <form id="commentForm" class="comment-form" onsubmit="submitComment(event, ${data.id})">
+                        <textarea name="content" placeholder="Drop your savage judgment..." rows="3" required></textarea>
+                        <button type="submit" class="btn btn-comment">Post Roast</button>
+                    </form>
+
+                    <div class="comments-list" id="commentsList">
+                        ${commentsHTML}
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Reinitialize slider if rating section is active
+        if (!data.is_expired) {
+            initializeSlider();
+        }
+    }
+    
+    function initializeSlider() {
+        const slider = document.getElementById('scoreSlider');
+        const emojiDisplay = document.getElementById('emojiDisplay');
+        const scoreValue = document.getElementById('scoreValue');
+        
+        if (slider) {
+            function updateEmoji() {
+                const score = parseInt(slider.value);
+                scoreValue.textContent = score;
+                emojiDisplay.textContent = getEmoji(score);
+                emojiDisplay.classList.add('animate');
+                setTimeout(() => emojiDisplay.classList.remove('animate'), 300);
+            }
+
+            slider.addEventListener('input', updateEmoji);
+            updateEmoji();
+        }
+    }
+    
+    function submitRating(event, postId) {
+        event.preventDefault();
+        const form = event.target;
+        const formData = new FormData(form);
+        
+        fetch(`/api/post/${postId}/rate/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrftoken
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update stats
+                document.getElementById('avgScore').textContent = data.average_score || '—';
+                document.getElementById('noVotes').textContent = data.no_votes || 0;
+                document.getElementById('totalScore').textContent = data.total_score || 0;
+                
+                // Show success message
+                alert(data.message);
+            } else {
+                alert(data.error || 'Failed to submit rating');
+            }
+        })
+        .catch(error => {
+            console.error('Error submitting rating:', error);
+            alert('Failed to submit rating');
+        });
+    }
+    
+    function submitComment(event, postId) {
+        event.preventDefault();
+        const form = event.target;
+        const formData = new FormData(form);
+        const textarea = form.querySelector('textarea');
+        
+        fetch(`/api/post/${postId}/comment/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrftoken
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Clear textarea
+                textarea.value = '';
+                
+                // Add new comment to the top of the list
+                const commentsList = document.getElementById('commentsList');
+                const newCommentHTML = `
+                    <div class="comment-item">
+                        <div class="comment-header">
+                            <span class="comment-author">@${data.comment.author}</span>
+                            <span class="comment-time">${data.comment.created_at}</span>
+                            ${data.comment.is_author ? `<a href="/comment/${data.comment.id}/delete/" class="delete-comment">Delete</a>` : ''}
+                        </div>
+                        <p class="comment-text">${data.comment.text}</p>
+                    </div>
+                `;
+                
+                // Remove "no comments" message if it exists
+                const noComments = commentsList.querySelector('.no-comments');
+                if (noComments) {
+                    noComments.remove();
+                }
+                
+                // Add new comment at the top
+                commentsList.insertAdjacentHTML('afterbegin', newCommentHTML);
+                
+                // Update comment count
+                document.querySelector('.section-title').textContent = `Judgments & Roasts (${data.comments_count})`;
+            } else {
+                alert(data.error || 'Failed to post comment');
+            }
+        })
+        .catch(error => {
+            console.error('Error submitting comment:', error);
+            alert('Failed to post comment');
+        });
+    }
+</script>
+
+{% endblock %}

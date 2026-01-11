@@ -1,5 +1,7 @@
 from django.shortcuts import redirect, render, get_object_or_404
-from posts.models import Post, Topic, comments, ratings
+from admin_pannel.models import Reports
+from posts.models import Post, comments, ratings
+from admin_pannel.models import Topic, Reports
 from django.db.models import Q
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -77,3 +79,23 @@ def content_view(request, post_id):
         "can_rate": not post.is_expired,
     }
     return render(request, "feed/content.html", context)
+
+def report_view(request, post_id=None):
+    if post_id:
+        post = get_object_or_404(Post, id=post_id)
+        if request.method == "POST":
+            reporter = request.user
+            reason = request.POST.get("reason")
+            report = Reports(reporter=reporter, post=post, reason=reason)
+            report.save()
+            messages.success(request, "Report submitted!")
+            return redirect("view_reports")
+        context = {"post": post}
+        return render(request, "feed/report.html", context)
+    else:
+        return redirect("public_feed")
+
+def view_reports(request):
+    reports = Reports.objects.all()
+    context = {"reports": reports}
+    return render(request, "feed/view_reports.html", context)

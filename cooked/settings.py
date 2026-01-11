@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     'base.apps.BaseConfig',
     'posts.apps.PostsConfig',
     'feed.apps.FeedConfig',
+    'admin_pannel.apps.AdminPannelConfig',
     
 ]
 

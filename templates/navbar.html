@@ -17,7 +17,6 @@
                 <form method="get" action="{% url 'public_feed' %}" class="search-form">
                     <input type="text" name="q" placeholder="Search confessions..." autocomplete="off">
                 </form>
-
                 <div class="nav-links">
                     <a href="{% url 'create_post' %}" 
                        class="{% if request.resolver_match.url_name == 'create_post' %}active{% endif %}">
@@ -28,9 +27,27 @@
                         Feed
                     </a>
                     <a href="{% url 'view_profile' %}" 
-                       class="{% if request.resolver_match.url_name == 'view_profile' %}active{% endif %}">
-                        Profile
-                    </a>
+                        class="{% if request.resolver_match.url_name == 'view_profile' %}active{% endif %}">
+                            Profile
+                        </a> 
+                    {%if user.is_staff or user.is_superuser %}
+                        <a href="{% url 'view_reports' %}" 
+                        class="{% if request.resolver_match.url_name == 'view_reports' %}active{% endif %}">
+                            Reports
+                        </a> 
+                        <a href="{% url 'view_users' %}"
+                        class="{% if request.resolver_match.url_name == 'view_users' %}active{% endif %}">
+                            Users
+                        </a> 
+                        <a href="{% url 'view_statistics' %}"
+                        class="{% if request.resolver_match.url_name == 'view_statistics' %}active{% endif %}">
+                            Statistics
+                        </a> 
+                        <a href="{% url 'add_topics' %}"
+                        class="{% if request.resolver_match.url_name == 'add_topics' %}active{% endif %}">
+                            Add 
+                        </a> 
+                    {% endif %}
                     <a href="{% url 'logoutuser' %}" class="logout-btn">Logout</a>
                 </div>
             </div>

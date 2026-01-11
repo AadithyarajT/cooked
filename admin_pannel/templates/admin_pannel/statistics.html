@@ -1,0 +1,189 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="stats-page">
+    <div class="stats-card">
+        <h1 class="stats-title">
+            <span class="flame">🔥</span> Platform Statistics <span class="flame">🔥</span>
+        </h1>
+
+        <p class="stats-subtitle">
+            Overview of the chaos we've created so far
+        </p>
+
+        {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} {{ message.tags }}-glow">
+                {{ message }}
+            </div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="stats-grid">
+            <div class="stat-item">
+                <div class="stat-icon">👤</div>
+                <div class="stat-value">{{ user_count|default:"0" }}</div>
+                <div class="stat-label">Total Users</div>
+            </div>
+
+            <div class="stat-item">
+                <div class="stat-icon">📝</div>
+                <div class="stat-value">{{ post_count|default:"0" }}</div>
+                <div class="stat-label">Total Confessions</div>
+            </div>
+
+            <div class="stat-item">
+                <div class="stat-icon">🏷️</div>
+                <div class="stat-value">{{ topic_count|default:"0" }}</div>
+                <div class="stat-label">Topics</div>
+            </div>
+
+            <div class="stat-item">
+                <div class="stat-icon">🚩</div>
+                <div class="stat-value">{{ report_count|default:"0" }}</div>
+                <div class="stat-label">Reports</div>
+            </div>
+        </div>
+
+        <div class="stats-footer">
+            <p>Last updated: {{ now|date:"F d, Y - H:i" }}</p>
+        </div>
+    </div>
+</div>
+
+<style>
+    .stats-page {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #0f0f12 0%, #1a0005 100%);
+        padding: clamp(1.5rem, 5vw, 3rem) 5%;
+    }
+
+    .stats-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: clamp(2rem, 5vw, 3.5rem);
+        width: 100%;
+        max-width: 900px;
+        box-shadow: 0 15px 45px rgba(0,0,0,0.6),
+                    0 0 35px rgba(255,45,85,0.15);
+        transition: transform 0.3s ease;
+        text-align: center;
+    }
+
+    .stats-card:hover {
+        transform: translateY(-6px);
+    }
+
+    .stats-title {
+        font-family: 'Orbitron', monospace;
+        font-size: clamp(2.2rem, 7vw, 3.2rem);
+        font-weight: 900;
+        color: var(--red);
+        margin-bottom: 0.8rem;
+        text-shadow: 0 0 25px rgba(255,45,85,0.5);
+        letter-spacing: -1px;
+    }
+
+    .flame {
+        animation: flicker 3s infinite alternate;
+    }
+
+    .stats-subtitle {
+        color: var(--text-muted);
+        font-size: clamp(1rem, 3.5vw, 1.2rem);
+        margin-bottom: 2.5rem;
+        line-height: 1.4;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: clamp(1.2rem, 3vw, 2rem);
+        margin: 2rem 0;
+    }
+
+    .stat-item {
+        background: rgba(255,45,85,0.08);
+        border: 1px solid rgba(255,45,85,0.15);
+        border-radius: 12px;
+        padding: 1.8rem 1.2rem;
+        transition: all 0.3s ease;
+    }
+
+    .stat-item:hover {
+        transform: translateY(-6px);
+        border-color: var(--red);
+        box-shadow: 0 10px 30px rgba(255,45,85,0.2);
+    }
+
+    .stat-icon {
+        font-size: 3.5rem;
+        margin-bottom: 0.8rem;
+        color: var(--red);
+    }
+
+    .stat-value {
+        font-size: clamp(2rem, 6vw, 3rem);
+        font-weight: 900;
+        color: var(--red);
+        margin: 0.5rem 0;
+        line-height: 1;
+    }
+
+    .stat-label {
+        color: var(--text-muted);
+        font-size: 1.1rem;
+        font-weight: 500;
+    }
+
+    .stats-footer {
+        text-align: center;
+        color: var(--text-muted);
+        font-size: 0.95rem;
+        margin-top: 2rem;
+    }
+
+    @keyframes flicker {
+        0%, 100% { opacity: 1; text-shadow: 0 0 25px rgba(255,45,85,0.6); }
+        50% { opacity: 0.75; text-shadow: 0 0 12px rgba(255,45,85,0.3); }
+    }
+
+    /* Mobile adjustments */
+    @media (max-width: 768px) {
+        .stats-page {
+            padding: 1.5rem 6%;
+        }
+
+        .stats-card {
+            padding: 2.2rem 1.8rem;
+        }
+
+        .stats-title {
+            font-size: clamp(2rem, 8vw, 2.8rem);
+        }
+
+        .stats-subtitle {
+            font-size: 1.1rem;
+        }
+
+        .stats-grid {
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+
+        .stat-item {
+            padding: 1.5rem 1rem;
+        }
+
+        .stat-value {
+            font-size: clamp(2.2rem, 8vw, 3rem);
+        }
+    }
+</style>
+
+{% endblock %}
